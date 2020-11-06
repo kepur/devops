@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: djangoblog-svc
+  namespace: default
+spec:
+  ports:
+  - name: port
+    port: 7790
+    protocol: TCP
+    targetPort: 7790
+  selector:
+    app: djangoblog
+  #type: NodePort

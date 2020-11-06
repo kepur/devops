@@ -1,0 +1,59 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata: 
+  namespace: default 
+  name: mysql-sgk
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mysql-sgk
+  template:
+    metadata:
+      namespace: default
+      name: mysql-sgk
+      labels:
+        app: mysql-sgk
+    spec:
+      containers:
+        - name: mysql-sgk
+          image: mysql:5.7
+          #只有镜像不存在时，才会进行镜像拉取
+          imagePullPolicy: IfNotPresent
+          ports:
+           - containerPort: 3306
+          #同 Docker 配置中的 environment
+          env:
+          - name: MYSQL_ROOT_PASSWORD
+            value: "Root!!2019"
+          - name: MYSQL_INITDB_SKIP_TZINFO
+            value: "Yes"
+          #容器中的挂载目录
+          volumeMounts:
+           - name: nfs-vol-mysql
+             mountPath: /var/lib/mysql
+           - name: timezone
+             mountPath: /etc/localtime
+      volumes:
+        #挂载到数据卷
+        - name: nfs-vol-mysql
+          persistentVolumeClaim:
+            claimName: nfs-pvc-mysql-sgk
+        - name: timezone
+          hostPath:
+            path: /usr/share/zoneinfo/Asia/Shanghai
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mysql-sgk
+spec:
+  type: NodePort
+  ports:
+   - port: 3306
+     protocol: TCP
+     targetPort: 3306
+     name: mysql-svc
+     nodePort: 31308
+  selector:
+    app: mysql-sgk

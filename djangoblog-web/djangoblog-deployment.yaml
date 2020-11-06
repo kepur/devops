@@ -1,0 +1,39 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: djangoblog
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: djangoblog
+  template:
+    metadata:
+      labels:
+        app: djangoblog
+    spec:
+      containers:
+      - name: djangoblog
+        image: wolihi/django-project-env:v1.0
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 7790
+        env:
+        - name: REVISION
+          value: v1.5
+        - name: db_username
+          value: "root"
+        - name: db_host
+          value: "mysql-master-svc"
+          #value: "mysql"
+        - name: db_port
+          value: "3306"
+        - name: db_name
+          value: "pronsearch"
+        - name: db_password
+          valueFrom:
+            secretKeyRef:
+              name: mysql-secret
+              key: password
+      #imagePullSecrets:
+      #- name: wangdi-docker-password

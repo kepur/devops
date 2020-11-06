@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: nfs-pv-mysql
+spec:
+  #设置容量
+  capacity:
+   storage: 8Gi
+  #访问模式
+  accessModes:
+    #该卷能够以独写模式被多个节点同时加载
+    - ReadWriteMany
+  #回收策略，这里是基础擦除‘rm -rf /’
+  persistentVolumeReclaimPolicy: Recycle
+  nfs:
+    #NFS服务端配置的路径
+    path: "/opt/kubernetes/volums/mysql"
+    #NFS 服务端地址
+    server: 10.25.96.50
+    readOnly: false
