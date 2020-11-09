@@ -6,7 +6,7 @@ metadata:
 spec:
   ports:
   - name: port
-    port: 7788
+    port: 7783
     protocol: TCP
     targetPort: 7783
   selector:
