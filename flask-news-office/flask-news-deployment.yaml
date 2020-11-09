@@ -17,7 +17,7 @@ spec:
         image: wolihi/flask-news-office:v1.0
         imagePullPolicy: Always
         ports:
-        - containerPort: 7788
+        - containerPort: 7783
         env:
         - name: REVISION
           value: v1.5

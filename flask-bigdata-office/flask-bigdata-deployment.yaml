@@ -17,7 +17,7 @@ spec:
         image: wolihi/flask-bigdata-office:v1.5
         imagePullPolicy: Always
         ports:
-        - containerPort: 7788
+        - containerPort: 7792
         env:
         - name: REVISION
           value: v1.5

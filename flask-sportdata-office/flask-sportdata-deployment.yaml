@@ -17,7 +17,7 @@ spec:
         image: wolihi/flask-sportdata-office:v1.0
         imagePullPolicy: Always
         ports:
-        - containerPort: 7788
+        - containerPort: 7789
         env:
         - name: REVISION
           value: v1.5

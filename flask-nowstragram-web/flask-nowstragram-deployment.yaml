@@ -17,7 +17,7 @@ spec:
         image: wolihi/flask-nowstragram-web:v1.0
         imagePullPolicy: Always
         ports:
-        - containerPort: 7788
+        - containerPort: 7781
         env:
         - name: REVISION
           value: v1.5
