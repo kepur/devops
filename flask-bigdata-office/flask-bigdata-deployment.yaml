@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
       - name: flask-bigdata-office
-        image: wolihi/flask-bigdata-office:v1.5
+        image: wolihi/flask-bigdata-office:v1.0
         imagePullPolicy: Always
         ports:
         - containerPort: 7792
