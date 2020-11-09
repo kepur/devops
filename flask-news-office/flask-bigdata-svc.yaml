@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: flask-news-office-svc
+  namespace: default
+spec:
+  ports:
+  - name: port
+    port: 7788
+    protocol: TCP
+    targetPort: 7783
+  selector:
+    app: flask-news-office
+  #type: NodePort

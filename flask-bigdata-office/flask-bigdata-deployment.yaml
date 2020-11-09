@@ -1,0 +1,39 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: flask-bigdata-office
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: flask-bigdata-office
+  template:
+    metadata:
+      labels:
+        app: flask-bigdata-office
+    spec:
+      containers:
+      - name: flask-bigdata-office
+        image: wolihi/flask-bigdata-office:v1.5
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 7788
+        env:
+        - name: REVISION
+          value: v1.5
+        - name: db_username
+          value: "root"
+        - name: db_host
+          value: "mysql-master-svc"
+          #value: "mysql"
+        - name: db_port
+          value: "3306"
+        - name: db_name
+          value: "flask-bigdata-office"
+        - name: db_password
+          valueFrom:
+            secretKeyRef:
+              name: mysql-secret
+              key: password
+      #imagePullSecrets:
+      #- name: wangdi-docker-password

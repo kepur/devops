@@ -1,0 +1,39 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: flask-nowstragram-web
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: flask-nowstragram-web
+  template:
+    metadata:
+      labels:
+        app: flask-nowstragram-web
+    spec:
+      containers:
+      - name: flask-nowstragram-web
+        image: wolihi/flask-nowstragram-web:v1.0
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 7788
+        env:
+        - name: REVISION
+          value: v1.5
+        - name: db_username
+          value: "root"
+        - name: db_host
+          value: "mysql-master-svc"
+          #value: "mysql"
+        - name: db_port
+          value: "3306"
+        - name: db_name
+          value: "flask-nowstragram-web"
+        - name: db_password
+          valueFrom:
+            secretKeyRef:
+              name: mysql-secret
+              key: password
+      #imagePullSecrets:
+      #- name: wangdi-docker-password
