@@ -1,7 +1,7 @@
 apiVersion: extensions/v1beta1
 kind: Ingress
 metadata:
-  name: ingress-flask-bigdata-office
+  name: ingress-flask-sportdata-office
   namespace: default
   annotations:
     #kubernetes.io/ingress.class: "nginx"
@@ -9,17 +9,17 @@ metadata:
       proxy_set_header X-Real-IP $http_x_forwarded_for;
 spec:
   rules:
-  - host: www.yazddaka.com
+  - host: www.frutrops.com
     http:
       paths:
       - backend:
-          serviceName: flask-bigdata-office-svc
-          servicePort: 7792
+          serviceName: flask-sportdata-office-svc
+          servicePort: 7789
         path: /
-  - host: yazddaka.com
+  - host: frutrops.com
     http:
       paths:
       - backend:
-          serviceName: flask-bigdata-office-svc
-          servicePort: 7792
+          serviceName: flask-sportdata-office-svc
+          servicePort: 7789
         path: /

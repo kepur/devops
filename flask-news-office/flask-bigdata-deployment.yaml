@@ -1,20 +1,20 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: pronsearch
+  name: flask-news-office
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
-      app: pronsearch
+      app: flask-news-office
   template:
     metadata:
       labels:
-        app: pronsearch
+        app: flask-news-office
     spec:
       containers:
-      - name: pronsearch
-        image: wolihi/pronsearch:v1.5
+      - name: flask-news-office
+        image: wolihi/flask-news-office:v1.0
         imagePullPolicy: Always
         ports:
         - containerPort: 7788
@@ -29,7 +29,7 @@ spec:
         - name: db_port
           value: "3306"
         - name: db_name
-          value: "pronsearch"
+          value: "flask-news-office"
         - name: db_password
           valueFrom:
             secretKeyRef:
