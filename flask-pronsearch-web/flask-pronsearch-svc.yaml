@@ -1,14 +1,14 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: djangoblog-svc
+  name: flask-pronsearch-web-svc
   namespace: default
 spec:
   ports:
   - name: port
-    port: 7790
+    port: 7788
     protocol: TCP
-    targetPort: 7790
+    targetPort: 7788
   selector:
-    app: djangoblog
+    app: flask-pronsearch-web
   #type: NodePort

@@ -1,9 +1,9 @@
 apiVersion: extensions/v1beta1
 kind: Ingress
 metadata:
-  name: ingress-pronsearch
+  name: ingress-flask-pronsearch-web
   namespace: default
-  annotations: 
+  annotations:
     #kubernetes.io/ingress.class: "nginx"
     wginx.ingress.kubernetes.io/configuration-snippet: |
       proxy_set_header X-Real-IP $http_x_forwarded_for;
@@ -13,13 +13,13 @@ spec:
     http:
       paths:
       - backend:
-          serviceName: pronsearch-svc
+          serviceName: flask-pronsearch-web-svc
           servicePort: 7788
         path: /
   - host: ezzysleep.com
     http:
       paths:
       - backend:
-          serviceName: pronsearch-svc
+          serviceName: flask-pronsearch-web-svc
           servicePort: 7788
         path: /

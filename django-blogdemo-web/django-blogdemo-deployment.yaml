@@ -1,23 +1,23 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: pronsearch
+  name: django-blogdemo-web
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
-      app: pronsearch
+      app: django-blogdemo-web
   template:
     metadata:
       labels:
-        app: pronsearch
+        app: django-blogdemo-web
     spec:
       containers:
-      - name: pronsearch
-        image: wolihi/pronsearch:v1.0
+      - name: djangdjango-blogdemo-weboblog
+        image: wolihi/django-blogdemo-web:v1.0
         imagePullPolicy: Always
         ports:
-        - containerPort: 7788
+        - containerPort: 7790
         env:
         - name: REVISION
           value: v1.5
@@ -29,7 +29,7 @@ spec:
         - name: db_port
           value: "3306"
         - name: db_name
-          value: "pronsearch"
+          value: "django-blogdemo-web"
         - name: db_password
           valueFrom:
             secretKeyRef:

@@ -1,23 +1,23 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: djangoblog
+  name: flask-pronsearch-web
 spec:
-  replicas: 1
+  replicas: 2
   selector:
     matchLabels:
-      app: djangoblog
+      app: flask-pronsearch-web
   template:
     metadata:
       labels:
-        app: djangoblog
+        app: flask-pronsearch-web
     spec:
       containers:
-      - name: djangoblog
-        image: wolihi/django-project-env:v1.0
+      - name: flask-pronsearch-web
+        image: wolihi/flask-pronsearch-web:v1.0
         imagePullPolicy: Always
         ports:
-        - containerPort: 7790
+        - containerPort: 7788
         env:
         - name: REVISION
           value: v1.5
@@ -29,7 +29,7 @@ spec:
         - name: db_port
           value: "3306"
         - name: db_name
-          value: "pronsearch"
+          value: "flask-pronsearch-web"
         - name: db_password
           valueFrom:
             secretKeyRef:
