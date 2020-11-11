@@ -3,7 +3,7 @@ kind: Deployment
 metadata:
   name: flask-pronsearch-web
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: flask-pronsearch-web
@@ -20,11 +20,11 @@ spec:
         - containerPort: 7788
         env:
         - name: REVISION
-          value: v1.5
+          value: v1.0
         - name: db_username
           value: "root"
         - name: db_host
-          value: "mysql-master-svc"
+          value: "mysql"
           #value: "mysql"
         - name: db_port
           value: "3306"

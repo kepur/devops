@@ -1,7 +1,7 @@
 apiVersion: extensions/v1beta1
 kind: Ingress
 metadata:
-  name: ingress-flask-bigdata-office
+  name: ingress-flask-movie-office
   namespace: default
   annotations:
     #kubernetes.io/ingress.class: "nginx"
@@ -9,17 +9,17 @@ metadata:
       proxy_set_header X-Real-IP $http_x_forwarded_for;
 spec:
   rules:
-  - host: www.yazddakal.com
+  - host: www.smokitoba.com
     http:
       paths:
       - backend:
-          serviceName: flask-bigdata-office-svc
-          servicePort: 7792
+          serviceName: flask-movie-office-svc
+          servicePort: 7783
         path: /
-  - host: yazddakal.com
+  - host: smokitoba.com
     http:
       paths:
       - backend:
-          serviceName: flask-bigdata-office-svc
-          servicePort: 7792
+          serviceName: flask-movie-office-svc
+          servicePort: 7783
         path: /

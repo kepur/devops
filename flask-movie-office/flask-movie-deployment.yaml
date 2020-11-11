@@ -1,26 +1,26 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: flask-sportdata-office
+  name: flask-movie-office
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: flask-sportdata-office
+      app: flask-movie-office
   template:
     metadata:
       labels:
-        app: flask-sportdata-office
+        app: flask-movie-office
     spec:
       containers:
-      - name: flask-sportdata-office
-        image: wolihi/flask-sportdata-office:v1.0
+      - name: flask-movie-office
+        image: wolihi/flask-movie-office:v1.0
         imagePullPolicy: Always
         ports:
-        - containerPort: 7789
+        - containerPort: 7783
         env:
         - name: REVISION
-          value: v1.0
+          value: v1.5
         - name: db_username
           value: "root"
         - name: db_host
@@ -29,7 +29,7 @@ spec:
         - name: db_port
           value: "3306"
         - name: db_name
-          value: "flask-sportdata-office"
+          value: "flask-movie-office"
         - name: db_password
           valueFrom:
             secretKeyRef:

@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: flask-movie-office-svc
+  namespace: default
+spec:
+  ports:
+  - name: port
+    port: 7783
+    protocol: TCP
+    targetPort: 7783
+  selector:
+    app: flask-movie-office
+  #type: NodePort

@@ -33,10 +33,22 @@ cd ~/devops/flask-bigdata-office/
 kubectl create -f flask-bigdata-deployment.yaml
 kubectl create -f flask-bigdata-svc.yaml
 kubectl create -f flask-bigdata-ingress.yaml
-cp /opt/nginx/conf/vhost/smokitoba.conf /opt/nginx/conf/vhost/yazddaka.conf
-sed -i 's/smokitoba/yazddaka/g' /opt/nginx/conf/vhost/yazddaka.conf
-sed -i '/saraluce.conf/a\    include vhost/yazddaka.conf;' /opt/nginx/conf/nginx.conf
+cp /opt/nginx/conf/vhost/smokitoba.conf /opt/nginx/conf/vhost/yazddakal.conf
+sed -i 's/smokitoba/yazddakal/g' /opt/nginx/conf/vhost/yazddakal.conf
+sed -i '/saraluce.conf/a\    include vhost/yazddakal.conf;' /opt/nginx/conf/nginx.conf
 kubectl get svc -o wide
 #更改10.108.61.2和端口7792
 vim /opt/nginx/conf/vhost/yazddaka.conf
 systemctl restart nginx
+
+
+
+mkdir pronsearch && cd pronsearch
+git clone https://gitlab.mouthmelt.com/root/flask-pronsearch-web.git
+cp flask-pronsearch-web/Dockerfile .
+docker build -t wolihi/flask-pronsearch-web:v1.0 .
+docker push wolihi/flask-pronsearch-web:v1.0
+cd ~/devops/flask-pronsearch-web/
+kubectl create -f flask-pronsearch-deployment.yaml
+kubectl create -f flask-pronsearch-svc.yaml
+kubectl create -f flask-pronsearch-ingress.yaml
