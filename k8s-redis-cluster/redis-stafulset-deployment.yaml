@@ -74,14 +74,14 @@ spec:
     matchLabels:
       app: redis-cluster-slave
   #所属服务的DNS域名
-  serviceName: "redis-cluster-salve"
+  serviceName: "redis-cluster-slave"
   template:
     metadata:
       labels:
-        app: redis-cluster-salve
+        app: redis-cluster-slave
     spec:
       containers:
-      - name: redis-cluster-salve
+      - name: redis-cluster-slave
         args:
           - -c
           - cp /mnt/redis-slave.conf /data/ ; redis-server /data/redis-slave.conf
