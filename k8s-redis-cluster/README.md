@@ -3,7 +3,6 @@ mkdir -p /usr/local/kubernetes/volumes/redis-data/redis-cluster-{1,2,3}
 chmod a+rw /usr/local/kubernetes/volumes/
 
 
-
 kubectl delete -f redis-pv1.yaml
 kubectl delete -f redis-pv2.yaml
 kubectl delete -f redis-pv3.yaml
