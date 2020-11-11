@@ -103,7 +103,7 @@ data:
     redis-cluster-config: |
       port 26379
       dir /data
-      sentinel monitor mymaster redis-cluster-master-0 6379 2
+      sentinel monitor mymaster redis-cluster-master-svc 6379 2
       sentinel down-after-milliseconds mymaster 30000
       sentinel parallel-syncs mymaster 1
       sentinel failover-timeout mymaster 180000
