@@ -15,10 +15,10 @@ spec:
   template:
     metadata:
       labels:
-        app: redis-master
+        app: redis-cluster-master
     spec:
       containers:
-      - name: redis-master
+      - name: redis-cluster-master
         args:
           - -c
           - cp /mnt/redis-master.conf /data/ ; redis-server /data/redis-master.conf
