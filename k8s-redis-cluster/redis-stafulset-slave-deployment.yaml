@@ -34,9 +34,9 @@ spec:
             - name: rds-backport
               containerPort: 6379
               protocol: "TCP"
-            # - name: cluster
-            #   containerPort: 16379
-            #   protocol: "TCP"
+            - name: cluster
+              containerPort: 6379
+              protocol: "TCP"
         volumeMounts:
           - mountPath: /mnt/
             readOnly: false
