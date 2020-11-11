@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: php-payment-office-svc
+  namespace: default
+spec:
+  ports:
+  - name: port
+    port: 7789
+    protocol: TCP
+    targetPort: 7789
+  selector:
+    app: php-payment-office
+  #type: NodePort
