@@ -51,15 +51,15 @@ spec:
           items:
             - key: "redis-master.conf"
               path: "redis-master.conf"
-      volumeClaimTemplates:
-      - metadata:
-          name: redis-master-storage
-        spec:
-          accessModes: [ "ReadWriteMany" ]
-          storageClassName: "redis-storage"
-          resources:
-            requests:
-              storage: 3Gi
+  volumeClaimTemplates:
+  - metadata:
+      name: redis-master-storage
+    spec:
+      accessModes: [ "ReadWriteMany" ]
+      storageClassName: "redis-storage"
+      resources:
+        requests:
+          storage: 3Gi
 ---
 apiVersion: apps/v1
 kind: StatefulSet
@@ -114,12 +114,12 @@ spec:
           items:
             - key: "redis-slave.conf"
               path: "redis-slave.conf"
-      volumeClaimTemplates:
-      - metadata:
-          name: redis-slave-storage
-        spec:
-          accessModes: [ "ReadWriteMany" ]
-          storageClassName: "redis-storage"
-          resources:
-            requests:
-              storage: 3Gi
+  volumeClaimTemplates:
+  - metadata:
+      name: redis-slave-storage
+    spec:
+      accessModes: [ "ReadWriteMany" ]
+      storageClassName: "redis-storage"
+      resources:
+        requests:
+          storage: 3Gi
