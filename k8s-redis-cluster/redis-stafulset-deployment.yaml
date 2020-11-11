@@ -31,17 +31,17 @@ spec:
             cpu: "100m"
             memory: "100Mi"
         ports:
-            - name: redis-master-port
+            - name: rds-masterport
               containerPort: 6379
               protocol: "TCP"
-            - name: cluster
-              containerPort: 16379
-              protocol: "TCP"
+            # - name: cluster
+            #   containerPort: 16379
+            #   protocol: "TCP"
         volumeMounts:
           - mountPath: /mnt/
             readOnly: false
             name: redis-config-volume
-          - mountPath: "/data"
+          - mountPath: "/data/"
             name: "redis-master-storage"
             readOnly: false
       volumes:
@@ -94,17 +94,17 @@ spec:
             cpu: "100m"
             memory: "100Mi"
         ports:
-            - name: redis-bkport
+            - name: rds-backport
               containerPort: 6379
               protocol: "TCP"
-            - name: cluster
-              containerPort: 16379
-              protocol: "TCP"
+            # - name: cluster
+            #   containerPort: 16379
+            #   protocol: "TCP"
         volumeMounts:
           - mountPath: /mnt/
             readOnly: false
             name: redis-config-volume
-          - mountPath: "/data"
+          - mountPath: "/data/"
             name: "redis-slave-storage"
             readOnly: false
       volumes:
