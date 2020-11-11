@@ -54,7 +54,7 @@ data:
       aof-rewrite-incremental-fsync yes
     redis-slave.conf: |
       port 6379
-      slaveof redis-master-0.redis-master.default.svc.cluster.local 6379
+      slaveof redis-cluster-master-svc 6379
       tcp-backlog 511
       timeout 0
       tcp-keepalive 0
