@@ -1,9 +1,9 @@
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
+  name: redis-cluster-master
   labels:
     app: redis-cluster-master
-  name: redis-cluster-master
   namespace: default
 spec:
   replicas: 1
@@ -47,7 +47,7 @@ spec:
       volumes:
       - name: "redis-config-volume"
         configMap:
-          name: "redis-cluster-conf"
+          name: "redis-cluster-config"
           items:
             - key: "redis-master.conf"
               path: "redis-master.conf"
