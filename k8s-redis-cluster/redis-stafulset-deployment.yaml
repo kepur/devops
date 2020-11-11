@@ -23,8 +23,8 @@ spec:
           - -c
           - cp /mnt/redis-master.conf /data/ ; redis-server /data/redis-master.conf
         command:
-          - bash
-        image: "redis:3.2.8"
+          - sh
+        image: redis
         imagePullPolicy: ifNotPresent
         resources:
           requests:
@@ -86,8 +86,8 @@ spec:
           - -c
           - cp /mnt/redis-slave.conf /data/ ; redis-server /data/redis-slave.conf
         command:
-          - bash
-        image: "redis:3.2.8"
+          - sh
+        image: redis
         imagePullPolicy: ifNotPresent
         resources:
           requests:
