@@ -3,12 +3,12 @@ kind: PersistentVolume
 metadata:
   name: redis-pv-volume2
 spec:
-  storageClassName: redis-storage
+  storageClassName: redis-cluster-storage
   capacity:
     storage: 3Gi
   accessModes:
     - ReadWriteMany
   persistentVolumeReclaimPolicy: Recycle
   nfs:
-    path: /opt/kubernetes/volums/redis-data/redis2
+    path: /opt/kubernetes/volums/redis-data/redis-cluster-2
     server: 10.25.96.30
