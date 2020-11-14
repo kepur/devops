@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
       - name: java-jira-office
-        image: wolihi/java-jira-office:v8.8.1
+        image: wolihi/java-jira-office:v8.1.0
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 8080
