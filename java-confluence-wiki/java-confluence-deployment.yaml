@@ -7,7 +7,6 @@ spec:
   selector:
     matchLabels:
       app: java-confluence-wiki
-  serviceName: java-confluence-wiki
   template:
     metadata:
       labels:
