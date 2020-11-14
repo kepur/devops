@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
       - name: java-confluence-wiki
-        image: wolihi/java-confluence-wiki:v7.4.0
+        image: wolihi/java-confluence-wiki:v7.9.0
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 8090
