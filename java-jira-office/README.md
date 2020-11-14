@@ -14,5 +14,5 @@ export JAVA_OPTS="-javaagent:/path/to/atlassian-agent.jar ${JAVA_OPTS}"
 
 mkdir -p /usr/local/kubernetes/volumes/jira-data
 
-docker build -t wolihi/java-jira-office:latest .
+docker build -t wolihi/java-jira-office:v8.8.1
 docker push wolihi/java-jira-office:latest

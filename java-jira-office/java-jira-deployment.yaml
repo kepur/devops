@@ -15,37 +15,37 @@ spec:
     spec:
       containers:
       - name: java-jira-office
-        image: wolihi/java-jira-office:latest
+        image: wolihi/java-jira-office:v8.8.1
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 8080
-        env:
-        - name: X_PROXY_SCHEME
-          value: "https"
-        - name: X_PROXY_SCHEME
-          value: "443"
-        - name: X_PROXY_NAME
-          value: "jira.mouthmelt.com"
-        - name: SETENV_JVM_MAXIMUM_MEMORY
-          value: "2048"
-        - name: SETENV_JVM_MINIMUM_MEMORY
-          value: "1024"
-        - name: JIRA_DATABASE_URL
-          value: "mysql-master-svc"
-        - name: JIRA_DB_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              name: mysql-secret
-              key: password
+        # env:
+        # - name: X_PROXY_SCHEME
+        #   value: "https"
+        # - name: X_PROXY_SCHEME
+        #   value: "443"
+        # - name: X_PROXY_NAME
+        #   value: "jira.mouthmelt.com"
+        # - name: SETENV_JVM_MAXIMUM_MEMORY
+        #   value: "2048"
+        # - name: SETENV_JVM_MINIMUM_MEMORY
+        #   value: "1024"
+        # - name: JIRA_DATABASE_URL
+        #   value: "mysql-master-svc"
+        # - name: JIRA_DB_PASSWORD
+        #   valueFrom:
+        #     secretKeyRef:
+        #       name: mysql-secret
+        #       key: password
       #imagePullSecrets:
       #- name: wangdi-docker-password
         volumeMounts:
         - name: jira-data
-          mountPath: /var/atlassian/
-          subPath: jira-application-data
+          mountPath: /var/atlassian/jira
+          subPath: jira-run-data
         - name: jira-data
-          mountPath: /etc/mysql/conf.d
-          subPath: jira-logs
+          mountPath: /opt/atlassian/jira
+          subPath: jira-application-data
   volumeClaimTemplates:
   - metadata:
       name: jira-data
