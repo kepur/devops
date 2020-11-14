@@ -11,5 +11,5 @@ spec:
      name: mysql-svc
      nodePort: 31789
   selector:
-    #app: mysql-0 
+    #app: mysql-0
      statefulset.kubernetes.io/pod-name: mysql-0
