@@ -45,6 +45,7 @@ spec:
           subPath: jira-run-data
         # - name: jira-data
         #   mountPath: /opt/atlassian/jira
+        #              /opt/atlassian/jira
         #   subPath: jira-application-data
   volumeClaimTemplates:
   - metadata:

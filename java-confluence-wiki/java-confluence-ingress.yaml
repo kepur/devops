@@ -1,7 +1,7 @@
 apiVersion: extensions/v1beta1
 kind: Ingress
 metadata:
-  name: ingress-java-confluence-office
+  name: ingress-java-confluence-wiki
   namespace: default
   annotations:
     #kubernetes.io/ingress.class: "nginx"
@@ -13,13 +13,13 @@ spec:
     http:
       paths:
       - backend:
-          serviceName: java-confluence-office-svc
+          serviceName: java-confluence-wiki-svc
           servicePort: 8080
         path: /
   - host: mouthmelt.com
     http:
       paths:
       - backend:
-          serviceName: java-confluence-office-svc
+          serviceName: java-confluence-wiki-svc
           servicePort: 8080
         path: /

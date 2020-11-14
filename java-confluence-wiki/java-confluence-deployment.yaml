@@ -1,39 +1,35 @@
 apiVersion: apps/v1
-kind: Deployment
+kind: StatefulSet
 metadata:
-  name: java-confluence-office
+  name: java-confluence-wiki
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: java-confluence-office
+      app: java-confluence-wiki
+  serviceName: java-confluence-wiki
   template:
     metadata:
       labels:
-        app: java-confluence-office
+        app: java-confluence-wiki
     spec:
       containers:
-      - name: java-confluence-office
-        image: wolihi/java-confluence-office:v1.0
-        imagePullPolicy: Always
+      - name: java-confluence-wiki
+        image: wolihi/java-confluence-wiki:v7.4.0
+        imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 8080
-        env:
-        - name: REVISION
-          value: v1.0
-        - name: db_username
-          value: "root"
-        - name: db_host
-          value: "mysql-master-svc"
-          #value: "mysql"
-        - name: db_port
-          value: "3306"
-        - name: db_name
-          value: "java-confluence-office"
-        - name: db_password
-          valueFrom:
-            secretKeyRef:
-              name: mysql-secret
-              key: password
-      #imagePullSecrets:
-      #- name: wangdi-docker-password
+        volumeMounts:
+        - name: confluence-data
+          mountPath: /var/atlassian/confluence
+          subPath: confluence-run-data
+  volumeClaimTemplates:
+  - metadata:
+      name: confluence-data
+    spec:
+      accessModes:
+      - "ReadWriteOnce"
+      storageClassName: confluence-storage
+      resources:
+        requests:
+          storage: 3Gi

@@ -11,13 +11,27 @@
 在软件安装目录类似：/path/to/confluence/logs/catalina.outTomcat日志内应该能找到：========= agent working =========的输出字样。
 export JAVA_OPTS="-javaagent:/path/to/atlassian-agent.jar ${JAVA_OPTS}"
 
+# 创建jira数据库及用户
+CREATE DATABASE confdb CHARACTER SET utf8mb4 COLLATE utf8mb4_bin;
+grant all on confdb.* to 'confuser'@'%' identified by 'bibi123.com';
+
+CREATE DATABASE jiradb CHARACTER SET utf8mb4 COLLATE utf8mb4_bin;
+grant all on jiradb.* to 'jirauser'@'%' identified by 'bibi123.com';
+
 showmount -e 10.25.96.30
 mount -t nfs 10.25.96.30:/opt/kubernetes/volums /usr/local/kubernetes/volumes
-rm -rf /usr/local/kubernetes/volumes/jira-data
-mkdir -p /usr/local/kubernetes/volumes/jira-data
-chmod -R a+rw /usr/local/kubernetes/volumes/redis-data
-
+cd ~/devops/java-jira-office
+kubectl delete -f java-jira-deployment.yaml
+kubectl delete -f java-jira-pv.yaml
 kubectl patch pv jira-pv-volume -p '{"metadata":{"finalizers":null}}'
+rm -rf /usr/local/kubernetes/volumes/jira-data
+
+mkdir -p /usr/local/kubernetes/volumes/jira-data
+chmod -R a+rw /usr/local/kubernetes/volumes/jira-data
+kubectl create -f java-jira-deployment.yaml
+kubectl create -f java-jira-pv.yaml
+
+
 docker build -t wolihi/java-jira-office:v8.1.0 .
 docker push wolihi/java-jira-office:v8.1.0
 docker push wolihi/java-jira-office:latest
