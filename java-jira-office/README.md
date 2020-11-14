@@ -1,37 +1,51 @@
-将atlassian-agent.jar放在一个你不会随便删除的位置（你服务器上的所有Atlassian服务可共享同一个atlassian-agent.jar）。
-设置环境变量JAVA_OPTS（这其实是Java的环境变量，用来指定其启动java程序时附带的参数），把-javaagent参数附带上。具体可以这么做：
-你可以把：export JAVA_OPTS="-javaagent:/path/to/atlassian-agent.jar ${JAVA_OPTS}"这样的命令放到.bashrc或.bash_profile这样的文件内。
-你可以把：export JAVA_OPTS="-javaagent:/path/to/atlassian-agent.jar ${JAVA_OPTS}"这样的命令放到服务安装所在bin目录下的setenv.sh或setenv.bat（供windows使用）中。
-你还可以直接命令行执行：JAVA_OPTS="-javaagent:/path/to/atlassian-agent.jar" /path/to/start-confluence.sh来启动你的服务。
-或者你所知的其他修改环境变量的方法，但如果你机器上有无关的服务，则不建议修改全局JAVA_OPTS环境变量。
-总之你想办法把-javaagent参数附带到要启动的java进程上。
-配置完成请重启你的Confluence服务。
-如果你想验证是否配置成功，可以这么做：
-执行类似命令：ps aux|grep java 找到对应的进程看看-javaagent参数是否正确附上。
-在软件安装目录类似：/path/to/confluence/logs/catalina.outTomcat日志内应该能找到：========= agent working =========的输出字样。
-export JAVA_OPTS="-javaagent:/path/to/atlassian-agent.jar ${JAVA_OPTS}"
-
 # 创建jira数据库及用户
-CREATE DATABASE confdb CHARACTER SET utf8mb4 COLLATE utf8mb4_bin;
-grant all on confdb.* to 'confuser'@'%' identified by 'bibi123.com';
-
 CREATE DATABASE jiradb CHARACTER SET utf8mb4 COLLATE utf8mb4_bin;
 grant all on jiradb.* to 'jirauser'@'%' identified by 'bibi123.com';
 
+如果没有设置需要设置一下
+SET GLOBAL tx_isolation='READ-COMMITTED';
+
+vim Dockerfile
+FROM cptactionhank/atlassian-jira-software:latest
+USER root
+COPY "atlassian-agent.jar" /opt/atlassian/jira/
+RUN echo 'export CATALINA_OPTS="-javaagent:/opt/atlassian/jira/atlassian-agent.jar ${CATALINA_OPTS}"' >> /opt/atlassian/jira/bin/setenv.sh
+
+开始构建镜像
+docker build -t wolihi/java-jira-office:v8.1.0 .
+docker push wolihi/java-jira-office:v8.1.0
+docker push wolihi/java-jira-office:latest
+
+测试挂载
 showmount -e 10.25.96.30
 mount -t nfs 10.25.96.30:/opt/kubernetes/volums /usr/local/kubernetes/volumes
+cd ~/devops/java-jira-office
+
+创建pod
+mkdir -p /usr/local/kubernetes/volumes/jira-data
+chmod -R a+rw /usr/local/kubernetes/volumes/jira-data
+chmod -R 777 /usr/local/kubernetes/volumes/jira-data
+chmod -R 777 /opt/kubernetes/volumes/jira-data
+kubectl create -f java-jira-deployment.yaml
+kubectl create -f java-jira-pv.yaml
+
+如果有问题回退
 cd ~/devops/java-jira-office
 kubectl delete -f java-jira-deployment.yaml
 kubectl delete -f java-jira-pv.yaml
 kubectl patch pv jira-pv-volume -p '{"metadata":{"finalizers":null}}'
 rm -rf /usr/local/kubernetes/volumes/jira-data
 
-mkdir -p /usr/local/kubernetes/volumes/jira-data
-chmod -R a+rw /usr/local/kubernetes/volumes/jira-data
-kubectl create -f java-jira-deployment.yaml
-kubectl create -f java-jira-pv.yaml
+获取POD的IP
+kubectl get pods -o wide | grep jira
 
+访问web获取服务器ID:
+http://jira.mouthmelt.com:31790/
+获取密钥
 
-docker build -t wolihi/java-jira-office:v8.1.0 .
-docker push wolihi/java-jira-office:v8.1.0
-docker push wolihi/java-jira-office:latest
+进入jar所在目录执行命令获取破解密钥:
+cd ~/atlassian/
+java -jar atlassian-agent.jar \
+  -d -m darkernode@gmail.com -n BAT \
+  -p jira -o http://10.1.166.146:8080 \
+  -s BHDW-75UE-85BR-LFJM

@@ -1,36 +1,58 @@
-
-
 # 创建confluence数据库及用户
 CREATE DATABASE confdb CHARACTER SET utf8mb4 COLLATE utf8mb4_bin;
 grant all on confdb.* to 'confuser'@'%' identified by 'bibi123.com';
 
+如果没有设置需要设置一下
+SET GLOBAL tx_isolation='READ-COMMITTED';
 
+编写并构建Dockerfile
 vim Dockerfile
 FROM cptactionhank/atlassian-confluence:latest
 USER root
 COPY "atlassian-agent.jar" /opt/atlassian/confluence/
 RUN echo 'export CATALINA_OPTS="-javaagent:/opt/atlassian/confluence/atlassian-agent.jar ${CATALINA_OPTS}"' >> /opt/atlassian/confluence/bin/setenv.sh
 
-docker build -t wolihi/java-confluence-wiki:v7.4.0 .
-docker push wolihi/java-confluence-wiki:v7.4.0
+
+开始构建镜像
+docker build -t wolihi/java-confluence-wiki:v7.9.0 .
+docker push wolihi/java-confluence-wiki:v7.9.0
+如果是lastest就构建latest
 docker push wolihi/java-confluence-wiki:latest
 
-
+确认一下K8S挂载的nfs
 showmount -e 10.25.96.30
 mount -t nfs 10.25.96.30:/opt/kubernetes/volums /usr/local/kubernetes/volumes
+
+开始安装
+cd ~/devops/java-confluence-wiki
+mkdir -p /usr/local/kubernetes/volumes/confluence-data
+chmod -R a+rw /usr/local/kubernetes/volumes/confluence-data
+kubectl create -f java-confluence-pv.yaml
+kubectl create -f java-confluence-deployment.yaml
+
+如果遇到问题重新安装一下
 cd ~/devops/java-confluence-wiki
 kubectl delete -f java-confluence-deployment.yaml
 kubectl delete -f java-confluence-pv.yaml
 kubectl patch pv confluence-pv-volume -p '{"metadata":{"finalizers":null}}'
 rm -rf /usr/local/kubernetes/volumes/confluence-data
 
-mkdir -p /usr/local/kubernetes/volumes/confluence-data
-chmod -R a+rw /usr/local/kubernetes/volumes/confluence-data
-kubectl create -f java-confluence-pv.yaml
-kubectl create -f java-confluence-deployment.yaml
 
+获取POD的IP
+kubectl get pods -o wide | grep confluence
 
+访问web获取服务器ID:
+http://mouthmelt.com:31791/
+获取密钥
 
+进入目录开始执行jar包获取破解密钥:
+cd ~/atlassian/
+java -jar atlassian-agent.jar \
+   -d -m darkernode@gmail.com -n BAT \
+   -p conf -o http://10.1.104.37:8090 \
+ -s BDFP-IBAU-ERD9-OK6C
+
+复制密钥:
 AAABow0ODAoPeJyNUl2PmzAQfOdXIPXZHCbhrhcJ6RJAKiqQqnCnvjqwCb6CjdYmbfrrawKn3kcUV
 fKLVzOzs7P7qWDazuXRpkvboyvfX3m+HRal7bmeax0QQDSy7wGdlFcgFJSnHnLWQRBusyz+Hibr1
 AoRmOZSRExDMBIJpYQurSuUCFSFvB9ZwaNoecc11HY7EezdyW607tXq5uZPw1twuLQyxoUGwUQF8
@@ -42,5 +64,5 @@ jnDHrmaxzNGgwtm5/jOHjfr8i9/WyrAMCwCFHzIjLyPRxmKuAlSyzCnYtjjIyjjAhQmdmgez22mG
 BbO/8Ze9zDXY9sURA==X02k8
 
 
-msyql链接信息
-jdbc:mysql://mysql-master-svc:3306/confdb?useUnicode=true&characterEncoding=utf8&sessionVariables=tx_isolation='READ-COMMITTED'&8&useSSL=false
+成功后测试msyql链接信息
+jdbc:mysql://mysql-master-svc:3306/confdb?useUnicode=true&characterEncoding=utf8&sessionVariables=tx_isolation='READ-COMMITTED'&useSSL=false

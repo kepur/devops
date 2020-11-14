@@ -14,12 +14,12 @@ spec:
       paths:
       - backend:
           serviceName: java-confluence-wiki-svc
-          servicePort: 8080
+          servicePort: 8090
         path: /
   - host: mouthmelt.com
     http:
       paths:
       - backend:
           serviceName: java-confluence-wiki-svc
-          servicePort: 8080
+          servicePort: 8090
         path: /
