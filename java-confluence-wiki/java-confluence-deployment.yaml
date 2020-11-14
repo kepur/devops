@@ -23,12 +23,22 @@ spec:
         - name: confluence-data
           mountPath: /var/atlassian/confluence
           subPath: confluence-run-data
-        - name: confluence-data
+        - name: confluence-system
           mountPath: /opt/atlassian/confluence
           subPath: confluence-system-data
   volumeClaimTemplates:
   - metadata:
       name: confluence-data
+    spec:
+      accessModes:
+      - "ReadWriteOnce"
+      storageClassName: confluence-storage
+      resources:
+        requests:
+          storage: 15Gi
+  volumeClaimTemplates:
+  - metadata:
+      name: confluence-system
     spec:
       accessModes:
       - "ReadWriteOnce"
