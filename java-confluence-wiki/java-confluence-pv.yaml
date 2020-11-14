@@ -5,7 +5,7 @@ metadata:
 spec:
   storageClassName: confluence-storage
   capacity:
-    storage: 10Gi
+    storage: 15Gi
   accessModes:
     - ReadWriteOnce
   persistentVolumeReclaimPolicy: Retain

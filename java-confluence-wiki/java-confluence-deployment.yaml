@@ -32,4 +32,4 @@ spec:
       storageClassName: confluence-storage
       resources:
         requests:
-          storage: 3Gi
+          storage: 15Gi
