@@ -26,5 +26,5 @@ rm -rf /usr/local/kubernetes/volumes/confluence-data
 
 mkdir -p /usr/local/kubernetes/volumes/confluence-data
 chmod -R a+rw /usr/local/kubernetes/volumes/confluence-data
-kubectl create -f java-confluence-deployment.yaml
 kubectl create -f java-confluence-pv.yaml
+kubectl create -f java-confluence-deployment.yaml
