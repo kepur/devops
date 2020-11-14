@@ -6,9 +6,9 @@ metadata:
 spec:
   ports:
   - name: port
-    port: 8080
+    port: 8090
     protocol: TCP
-    targetPort: 7789
+    targetPort: 8090
   selector:
-    app: java-confluence-wiki
+    app: java-confluence-wiki-0
   #type: NodePort

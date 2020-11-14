@@ -18,7 +18,7 @@ spec:
         image: wolihi/java-confluence-wiki:v7.4.0
         imagePullPolicy: IfNotPresent
         ports:
-        - containerPort: 8080
+        - containerPort: 8090
         volumeMounts:
         - name: confluence-data
           mountPath: /var/atlassian/confluence
