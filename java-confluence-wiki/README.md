@@ -31,6 +31,7 @@ chmod -R a+rw /usr/local/kubernetes/volumes/confluence-data
 chmod -R 777 /usr/local/kubernetes/volumes/confluence-data
 chmod -R 777 /opt/kubernetes/volumes/confluence-data
 kubectl create -f java-confluence-pv.yaml
+kubectl create -f java-confluence-pvc.yaml
 kubectl create -f java-confluence-deployment.yaml
 
 如果遇到问题重新安装一下
