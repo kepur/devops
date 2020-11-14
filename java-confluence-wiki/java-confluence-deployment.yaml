@@ -23,6 +23,9 @@ spec:
         - name: confluence-data
           mountPath: /var/atlassian/confluence
           subPath: confluence-run-data
+        - name: confluence-data
+          mountPath: /opt/atlassian/confluence
+          subPath: confluence-system-data
   volumeClaimTemplates:
   - metadata:
       name: confluence-data
