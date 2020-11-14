@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: java-jira-office-svc
+  namespace: default
+spec:
+  ports:
+  - name: port
+    port: 8080
+    protocol: TCP
+    targetPort: 8080
+  selector:
+    app: java-jira-office
+  #type: NodePort

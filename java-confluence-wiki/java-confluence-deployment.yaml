@@ -1,0 +1,39 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: java-confluence-office
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: java-confluence-office
+  template:
+    metadata:
+      labels:
+        app: java-confluence-office
+    spec:
+      containers:
+      - name: java-confluence-office
+        image: wolihi/java-confluence-office:v1.0
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8080
+        env:
+        - name: REVISION
+          value: v1.0
+        - name: db_username
+          value: "root"
+        - name: db_host
+          value: "mysql-master-svc"
+          #value: "mysql"
+        - name: db_port
+          value: "3306"
+        - name: db_name
+          value: "java-confluence-office"
+        - name: db_password
+          valueFrom:
+            secretKeyRef:
+              name: mysql-secret
+              key: password
+      #imagePullSecrets:
+      #- name: wangdi-docker-password
