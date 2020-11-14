@@ -1,5 +1,5 @@
 apiVersion: apps/v1
-kind: StatefulSet
+kind: deployment
 metadata:
   name: java-confluence-wiki
 spec:
@@ -15,22 +15,21 @@ spec:
     spec:
       containers:
       - name: java-confluence-wiki
-        image: wolihi/java-confluence-wiki:v7.9.0
+        image: wolihi/java-confluence-wiki:latest
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 8090
         volumeMounts:
-        - name: confluence-data
+        - name: confluence-run-data
           mountPath: /var/atlassian/confluence
           subPath: confluence-run-data
+        - name: confluence-sys-data
           mountPath: /opt/atlassian/confluence
-  volumeClaimTemplates:
-  - metadata:
-      name: confluence-data
-    spec:
-      accessModes:
-      - "ReadWriteMany"
-      storageClassName: confluence-storage
-      resources:
-        requests:
-          storage: 15Gi
+          subPath: confluence-sys-data
+      volumes:
+      - name: confluence-run-data
+        persistentVolumeClaim:
+          claimName: java-confluence-pvc
+      - name: confluence-sys-data
+        persistentVolumeClaim:
+          claimName: java-confluence-pvc

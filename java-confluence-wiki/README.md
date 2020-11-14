@@ -17,6 +17,7 @@ RUN echo 'export CATALINA_OPTS="-javaagent:/opt/atlassian/confluence/atlassian-a
 docker build -t wolihi/java-confluence-wiki:v7.9.0 .
 docker push wolihi/java-confluence-wiki:v7.9.0
 如果是lastest就构建latest
+docker build -t wolihi/java-confluence-wiki:latest .
 docker push wolihi/java-confluence-wiki:latest
 
 确认一下K8S挂载的nfs
