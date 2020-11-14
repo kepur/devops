@@ -11,9 +11,13 @@
 在软件安装目录类似：/path/to/confluence/logs/catalina.outTomcat日志内应该能找到：========= agent working =========的输出字样。
 export JAVA_OPTS="-javaagent:/path/to/atlassian-agent.jar ${JAVA_OPTS}"
 
-
+showmount -e 10.25.96.30
+mount -t nfs 10.25.96.30:/opt/kubernetes/volums /usr/local/kubernetes/volumes
+rm -rf /usr/local/kubernetes/volumes/jira-data
 mkdir -p /usr/local/kubernetes/volumes/jira-data
+chmod -R a+rw /usr/local/kubernetes/volumes/redis-data
 
+kubectl patch pv jira-pv-volume -p '{"metadata":{"finalizers":null}}'
 docker build -t wolihi/java-jira-office:v8.1.0 .
 docker push wolihi/java-jira-office:v8.1.0
 docker push wolihi/java-jira-office:latest
