@@ -4,8 +4,6 @@ metadata:
   name: confluence-run-data-pv-volume
 spec:
   storageClassName: confluence-run-storage
-  capacity:
-    storage: 15Gi
   accessModes:
     - ReadWriteMany
   persistentVolumeReclaimPolicy: Recycle
@@ -13,6 +11,8 @@ spec:
     path: /opt/kubernetes/volums/confluence-data/confluence-run-data
     server: 10.25.96.30
     readOnly: false
+  capacity:
+    storage: 15Gi
 ---
 apiVersion: v1
   kind: PersistentVolume
