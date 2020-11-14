@@ -10,5 +10,5 @@ spec:
     protocol: TCP
     targetPort: 8090
   selector:
-    app: java-confluence-wiki-0
+    app: java-confluence-wiki
   #type: NodePort
