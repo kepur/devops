@@ -17,4 +17,4 @@ spec:
      nodePort: 31792
   selector:
     #app: mysql-0
-     statefulset.kubernetes.io/pod-name: java-confluence-wiki-0
+     statefulset.kubernetes.io/pod-name: java-confluence-wiki
