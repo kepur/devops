@@ -21,12 +21,12 @@ spec:
         volumeMounts:
         - name: confluence-run-data
           mountPath: /var/atlassian/confluence
-        - name: confluence-sys-data
-          mountPath: /opt/atlassian/confluence/conf/
+        # - name: confluence-sys-data
+        #   mountPath: /opt/atlassian/confluence/conf/
       volumes:
       - name: confluence-run-data
         persistentVolumeClaim:
           claimName: java-confluence-run-pvc
-      - name: confluence-sys-data
-        persistentVolumeClaim:
-          claimName: java-confluence-sys-pvc
+      # - name: confluence-sys-data
+      #   persistentVolumeClaim:
+      #     claimName: java-confluence-sys-pvc
