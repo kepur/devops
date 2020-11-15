@@ -10,7 +10,7 @@ spec:
     - ReadWriteMany
   persistentVolumeReclaimPolicy: Retain
   nfs:
-    path: /opt/kubernetes/volums/confluence-run-data
+    path: /opt/kubernetes/volums/confluence-data
     server: 10.25.96.30
     readOnly: false
 
