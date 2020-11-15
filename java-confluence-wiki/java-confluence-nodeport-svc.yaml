@@ -8,13 +8,13 @@ spec:
    - port: 8090
      protocol: TCP
      targetPort: 8090
-     name: java-confluence-nodeport-svc
+     name: java-confluence-nodeport-svc1
      nodePort: 31791
   ports:
    - port: 8091
      protocol: TCP
      targetPort: 8091
-     name: java-confluence-nodeport-svc
+     name: java-confluence-nodeport-svc2
      nodePort: 31792
   selector:
     #app: mysql-0

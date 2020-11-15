@@ -5,15 +5,15 @@ metadata:
   namespace: default
 spec:
   ports:
-  - name: port
+  - name: confluenceport8090
     port: 8090
     protocol: TCP
     targetPort: 8090
   ports:
-  - name: port
+  - name: confluenceport8091
     port: 8091
     protocol: TCP
-    targetPort: 8091  
+    targetPort: 8091
   selector:
     app: java-confluence-wiki
   #type: NodePort
