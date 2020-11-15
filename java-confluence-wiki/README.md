@@ -13,6 +13,17 @@ COPY "atlassian-agent.jar" /opt/atlassian/confluence/
 RUN echo 'export CATALINA_OPTS="-javaagent:/opt/atlassian/confluence/atlassian-agent.jar ${CATALINA_OPTS}"' >> /opt/atlassian/confluence/bin/setenv.sh
 
 
+更改
+<!--                                                                                                                                                                                     
+    <Connector port="8090" connectionTimeout="20000" redirectPort="8443"                                           
+               maxThreads="48" minSpareThreads="10"                                                                
+               enableLookups="false" acceptCount="10" debug="0" URIEncoding="UTF-8"                                
+               protocol="org.apache.coyote.http11.Http11NioProtocol"                                               
+               scheme="https" secure="true" proxyName="mouthmelt.com" proxyPort="443"/>                            
+    -->   
+bash-4.4# vi /opt/atlassian/confluence/conf/server.xml 
+bash-4.4# /opt/atlassian/confluence/bin/stop-confluence.sh
+
 开始构建镜像
 docker build -t wolihi/java-confluence-wiki:v7.9.0 .
 docker push wolihi/java-confluence-wiki:v7.9.0
@@ -63,8 +74,8 @@ http://mouthmelt.com:31791/
 cd ~/atlassian/
 java -jar atlassian-agent.jar \
    -d -m darkernode@gmail.com -n BAT \
-   -p conf -o http://10.1.104.43:8090 \
- -s B012-Q8OC-5W16-VKGO
+   -p conf -o http://10.1.135.3:8090 \
+ -s BZ21-3RWI-MHJK-XWZ7
 
 复制密钥:
 AAABow0ODAoPeJyNUl2PmzAQfOdXIPXZHCbhrhcJ6RJAKiqQqnCnvjqwCb6CjdYmbfrrawKn3kcUV
