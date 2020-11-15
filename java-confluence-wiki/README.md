@@ -28,9 +28,12 @@ mount -t nfs 10.25.96.30:/opt/kubernetes/volums /usr/local/kubernetes/volumes
 cd ~/devops/java-confluence-wiki
 mkdir -p /usr/local/kubernetes/volumes/confluence-sys-data
 mkdir -p /usr/local/kubernetes/volumes/confluence-run-data
-chmod -R a+rw /usr/local/kubernetes/volumes/confluence-data
-chmod -R 777 /usr/local/kubernetes/volumes/confluence-data
-chmod -R 777 /opt/kubernetes/volumes/confluence-data
+chmod -R a+rw /usr/local/kubernetes/volumes/confluence-sys-data
+chmod -R 777 /usr/local/kubernetes/volumes/confluence-sys-data
+chmod -R a+rw /usr/local/kubernetes/volumes/confluence-run-data
+chmod -R 777 /usr/local/kubernetes/volumes/confluence-run-data
+chmod -R 777 /opt/kubernetes/volums/confluence-sys-data
+chmod -R 777 /opt/kubernetes/volums/confluence-run-data
 kubectl create -f java-confluence-pv.yaml
 kubectl create -f java-confluence-pvc.yaml
 kubectl create -f java-confluence-deployment.yaml
