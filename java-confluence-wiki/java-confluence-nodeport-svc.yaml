@@ -16,5 +16,5 @@ spec:
      name: java-confluence-nodeport-svc2
      nodePort: 31792
   selector:
-    #app: mysql-0
-     statefulset.kubernetes.io/pod-name: java-confluence-wiki
+    app: java-confluence-wiki
+     # statefulset.kubernetes.io/pod-name: java-confluence-wiki
