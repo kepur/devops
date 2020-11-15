@@ -57,8 +57,8 @@ http://mouthmelt.com:31791/
 cd ~/atlassian/
 java -jar atlassian-agent.jar \
    -d -m darkernode@gmail.com -n BAT \
-   -p conf -o http://10.1.104.37:8090 \
- -s BDFP-IBAU-ERD9-OK6C
+   -p conf -o http://10.1.104.43:8090 \
+ -s B012-Q8OC-5W16-VKGO
 
 复制密钥:
 AAABow0ODAoPeJyNUl2PmzAQfOdXIPXZHCbhrhcJ6RJAKiqQqnCnvjqwCb6CjdYmbfrrawKn3kcUV
