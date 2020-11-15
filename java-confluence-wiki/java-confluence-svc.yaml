@@ -9,6 +9,11 @@ spec:
     port: 8090
     protocol: TCP
     targetPort: 8090
+  ports:
+  - name: port
+    port: 8091
+    protocol: TCP
+    targetPort: 8091  
   selector:
     app: java-confluence-wiki
   #type: NodePort
