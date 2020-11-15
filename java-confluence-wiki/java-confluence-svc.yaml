@@ -5,12 +5,11 @@ metadata:
   namespace: default
 spec:
   ports:
-  - name: confluenceport8090
+  - name: conf8090
     port: 8090
     protocol: TCP
     targetPort: 8090
-  ports:
-  - name: confluenceport8091
+  - name: conf8091
     port: 8091
     protocol: TCP
     targetPort: 8091
