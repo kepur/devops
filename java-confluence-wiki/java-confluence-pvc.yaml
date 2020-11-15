@@ -20,7 +20,7 @@ spec:
   storageClassName: confluence-sys-storage
   accessModes:
   #需要使用和PV 一致的访问方式
-  - ReadWriteMany
+  - ReadWriteOnce
   #按需分配资源
   resources:
     requests:

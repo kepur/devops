@@ -24,8 +24,8 @@ spec:
   capacity:
     storage: 5Gi
   accessModes:
-    - ReadWriteMany
-  persistentVolumeReclaimPolicy: Recycle
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
   nfs:
     path: /opt/kubernetes/volums/confluence-sys-data
     server: 10.25.96.30
