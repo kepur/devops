@@ -10,7 +10,7 @@ spec:
   #按需分配资源
   resources:
     requests:
-      storage: 12Gi
+      storage: 11Gi
 # ---
 # apiVersion: v1
 # kind: PersistentVolumeClaim
