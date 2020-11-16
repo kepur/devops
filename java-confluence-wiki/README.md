@@ -82,15 +82,16 @@ rm -rf /usr/local/kubernetes/volumes/confluence-data
 kubectl get pods -o wide | grep confluence
 
 访问web获取服务器ID:
-http://mouthmelt.com:31791/
+http://202.182.110.99:31791
+https://mouthmelt.com
 获取密钥
 
 进入目录开始执行jar包获取破解密钥:
 cd ~/atlassian/
 java -jar atlassian-agent.jar \
    -d -m darkernode@gmail.com -n BAT \
-   -p conf -o http://10.1.135.37:8090 \
- -s BVTA-XLUO-90GN-ICK4
+   -p conf -o http://10.1.135.13:8090 \
+ -s BKN8-2SY0-FZ1G-M7RT
 
 复制密钥:
 AAABow0ODAoPeJyNUl2PmzAQfOdXIPXZHCbhrhcJ6RJAKiqQqnCnvjqwCb6CjdYmbfrrawKn3kcUV
