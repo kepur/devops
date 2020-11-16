@@ -3,6 +3,7 @@ kind: PersistentVolumeClaim
 metadata:
   name: nfs-pvc-mysql-sgk
 spec:
+  storageClassName: mysql-storage
   accessModes:
   #需要使用和PV 一致的访问方式
   - ReadWriteMany
