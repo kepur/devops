@@ -5,6 +5,7 @@ grant all on confdb.* to 'confuser'@'%' identified by 'bibi123.com';
 如果没有设置需要设置一下
 SET GLOBAL tx_isolation='READ-COMMITTED';
 
+
 编写并构建Dockerfile
 vim Dockerfile
 FROM cptactionhank/atlassian-confluence:latest
@@ -13,16 +14,37 @@ COPY "atlassian-agent.jar" /opt/atlassian/confluence/
 RUN echo 'export CATALINA_OPTS="-javaagent:/opt/atlassian/confluence/atlassian-agent.jar ${CATALINA_OPTS}"' >> /opt/atlassian/confluence/bin/setenv.sh
 
 
-更改
-<!--                                                                                                                                                                                     
-    <Connector port="8090" connectionTimeout="20000" redirectPort="8443"                                           
-               maxThreads="48" minSpareThreads="10"                                                                
-               enableLookups="false" acceptCount="10" debug="0" URIEncoding="UTF-8"                                
-               protocol="org.apache.coyote.http11.Http11NioProtocol"                                               
-               scheme="https" secure="true" proxyName="mouthmelt.com" proxyPort="443"/>                            
-    -->   
-bash-4.4# vi /opt/atlassian/confluence/conf/server.xml 
-bash-4.4# /opt/atlassian/confluence/bin/stop-confluence.sh
+容器内的server更改
+vi /opt/atlassian/confluence/conf/server.xml
+我这里已经写好了
+mkdir -p /root/atlassian/confluence/
+cat >/root/atlassian/confluence/server.xml <<EOF
+<?xml version="1.0"?>
+<Server port="8000" shutdown="SHUTDOWN">
+  <Service name="Tomcat-Standalone">
+        <Connector port="8090" connectionTimeout="20000" redirectPort="8443"
+                   maxThreads="48" minSpareThreads="10"
+                   enableLookups="false" acceptCount="10" debug="0" URIEncoding="UTF-8"
+                   protocol="org.apache.coyote.http11.Http11NioProtocol"
+                   scheme="https" secure="true" proxyName="mouthmelt.com" proxyPort="443"/>
+        <Engine name="Standalone" defaultHost="localhost">
+          <Host name="localhost" appBase="webapps" unpackWARs="true" autoDeploy="false" startStopThreads="4">
+            <Context path="" docBase="../confluence" debug="0" reloadable="false">
+              <Manager pathname=""/>
+              <Valve className="org.apache.catalina.valves.StuckThreadDetectionValve" threshold="60"/>
+            </Context>
+            <Context path="${confluence.context.path}/synchrony-proxy" docBase="../synchrony-proxy" reloadable="true" useHttpOnly="true">
+              <Valve className="org.apache.catalina.valves.StuckThreadDetectionValve" threshold="60"/>
+            </Context>
+          </Host>
+        </Engine>
+  </Service>
+</Server>
+EOF
+
+创建configmap
+kubectl create configmap tomcat-config --from-file=/root/atlassian/confluence/server.xml
+
 
 开始构建镜像
 docker build -t wolihi/java-confluence-wiki:v7.9.0 .
@@ -38,28 +60,18 @@ mount -t nfs 10.25.96.30:/opt/kubernetes/volums /usr/local/kubernetes/volumes
 开始安装
 cd ~/devops/java-confluence-wiki
 mkdir -p /usr/local/kubernetes/volumes/confluence-data
+chmod -R a+rw /usr/local/kubernetes/volumes/confluence-data
+chmod -R 777 /usr/local/kubernetes/volumes/confluence-data
 kubectl create -f java-confluence-pv.yaml
 kubectl create -f java-confluence-pvc.yaml
 kubectl create -f java-confluence-deployment.yaml
-chmod -R a+rw /usr/local/kubernetes/volumes/confluence-data
-chmod -R 777 /usr/local/kubernetes/volumes/confluence-data
-
-之前版本:
-mkdir -p /usr/local/kubernetes/volumes/confluence-sys-data
-mkdir -p /usr/local/kubernetes/volumes/confluence-run-data
-chmod -R a+rw /usr/local/kubernetes/volumes/confluence-sys-data
-chmod -R 777 /usr/local/kubernetes/volumes/confluence-sys-data
-chmod -R a+rw /usr/local/kubernetes/volumes/confluence-run-data
-chmod -R 777 /usr/local/kubernetes/volumes/confluence-run-data
-chmod -R 777 /opt/kubernetes/volums/confluence-sys-data
-chmod -R 777 /opt/kubernetes/volums/confluence-run-data
 
 
 如果遇到问题重新安装一下
 cd ~/devops/java-confluence-wiki
 kubectl delete -f java-confluence-deployment.yaml
 kubectl delete -f java-confluence-pv.yaml
-kubectl patch pv confluence-pv-volume -p '{"metadata":{"finalizers":null}}'
+kubectl patch pv confluence-run-data-pv-volume -p '{"metadata":{"finalizers":null}}'
 rm -rf /usr/local/kubernetes/volumes/confluence-data
 
 
@@ -74,8 +86,8 @@ http://mouthmelt.com:31791/
 cd ~/atlassian/
 java -jar atlassian-agent.jar \
    -d -m darkernode@gmail.com -n BAT \
-   -p conf -o http://10.1.135.3:8090 \
- -s BZ21-3RWI-MHJK-XWZ7
+   -p conf -o http://10.1.135.26:8090 \
+ -s BGX3-NQ5K-VJT8-ZIVU
 
 复制密钥:
 AAABow0ODAoPeJyNUl2PmzAQfOdXIPXZHCbhrhcJ6RJAKiqQqnCnvjqwCb6CjdYmbfrrawKn3kcUV
