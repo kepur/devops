@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: postgresql-pv
+spec:
+  storageClassName: postgresql-storage
+  capacity:
+    storage: 5Gi
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  nfs:
+    #NFS服务端配置的路径
+    path: "/opt/kubernetes/volums/postgresql-data"
+    #NFS 服务端地址
+    server: 10.25.96.30
+    readOnly: false
