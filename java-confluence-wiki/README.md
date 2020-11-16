@@ -90,8 +90,8 @@ https://mouthmelt.com
 cd ~/atlassian/
 java -jar atlassian-agent.jar \
    -d -m darkernode@gmail.com -n BAT \
-   -p conf -o http://10.1.135.13:8090 \
- -s BKN8-2SY0-FZ1G-M7RT
+   -p conf -o http://10.1.135.25:8090 \
+ -s B4SE-LFQJ-5L4Y-R2LW
 
 复制密钥:
 AAABow0ODAoPeJyNUl2PmzAQfOdXIPXZHCbhrhcJ6RJAKiqQqnCnvjqwCb6CjdYmbfrrawKn3kcUV
