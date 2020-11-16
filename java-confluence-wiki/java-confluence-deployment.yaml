@@ -25,6 +25,7 @@ spec:
           mountPath: /var/atlassian/confluence
         - name: config-volume
           mountPath: /opt/atlassian/confluence/conf/
+          subPath: server.xml
       volumes:
       - name: confluence-run-data
         persistentVolumeClaim:

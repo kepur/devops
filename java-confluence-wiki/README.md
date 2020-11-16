@@ -26,7 +26,7 @@ cat >/root/atlassian/confluence/server.xml <<EOF
                    maxThreads="48" minSpareThreads="10"
                    enableLookups="false" acceptCount="10" debug="0" URIEncoding="UTF-8"
                    protocol="org.apache.coyote.http11.Http11NioProtocol"
-                   scheme="https" secure="true" proxyName="mouthmelt.com" proxyPort="443"/>
+                   scheme="https" secure="true" proxyName="mouthmelt.com" proxyPort="443"/>        
         <Engine name="Standalone" defaultHost="localhost">
           <Host name="localhost" appBase="webapps" unpackWARs="true" autoDeploy="false" startStopThreads="4">
             <Context path="" docBase="../confluence" debug="0" reloadable="false">
@@ -41,6 +41,8 @@ cat >/root/atlassian/confluence/server.xml <<EOF
   </Service>
 </Server>
 EOF
+
+
 
 创建configmap
 kubectl create configmap tomcat-config --from-file=/root/atlassian/confluence/server.xml
@@ -70,6 +72,7 @@ kubectl create -f java-confluence-deployment.yaml
 如果遇到问题重新安装一下
 cd ~/devops/java-confluence-wiki
 kubectl delete -f java-confluence-deployment.yaml
+kubectl delete -f java-confluence-pvc.yaml
 kubectl delete -f java-confluence-pv.yaml
 kubectl patch pv confluence-run-data-pv-volume -p '{"metadata":{"finalizers":null}}'
 rm -rf /usr/local/kubernetes/volumes/confluence-data
@@ -86,8 +89,8 @@ http://mouthmelt.com:31791/
 cd ~/atlassian/
 java -jar atlassian-agent.jar \
    -d -m darkernode@gmail.com -n BAT \
-   -p conf -o http://10.1.135.26:8090 \
- -s BGX3-NQ5K-VJT8-ZIVU
+   -p conf -o http://10.1.135.37:8090 \
+ -s BVTA-XLUO-90GN-ICK4
 
 复制密钥:
 AAABow0ODAoPeJyNUl2PmzAQfOdXIPXZHCbhrhcJ6RJAKiqQqnCnvjqwCb6CjdYmbfrrawKn3kcUV
