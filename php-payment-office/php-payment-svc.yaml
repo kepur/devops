@@ -6,9 +6,8 @@ metadata:
 spec:
   ports:
   - name: port
-    port: 7789
+    port: 9000
     protocol: TCP
-    targetPort: 7789
+    targetPort: 9000
   selector:
     app: php-payment-office
-  #type: NodePort

@@ -22,22 +22,22 @@ cat >/root/atlassian/confluence/server.xml <<EOF
 <?xml version="1.0"?>
 <Server port="8000" shutdown="SHUTDOWN">
   <Service name="Tomcat-Standalone">
-        <Connector port="8090" connectionTimeout="20000" redirectPort="8443"
+     <Connector port="8090" connectionTimeout="20000" redirectPort="8443"
                    maxThreads="48" minSpareThreads="10"
                    enableLookups="false" acceptCount="10" debug="0" URIEncoding="UTF-8"
                    protocol="org.apache.coyote.http11.Http11NioProtocol"
-                   scheme="https" secure="true" proxyName="mouthmelt.com" proxyPort="443"/>        
-        <Engine name="Standalone" defaultHost="localhost">
-          <Host name="localhost" appBase="webapps" unpackWARs="true" autoDeploy="false" startStopThreads="4">
-            <Context path="" docBase="../confluence" debug="0" reloadable="false">
-              <Manager pathname=""/>
-              <Valve className="org.apache.catalina.valves.StuckThreadDetectionValve" threshold="60"/>
-            </Context>
-            <Context path="${confluence.context.path}/synchrony-proxy" docBase="../synchrony-proxy" reloadable="true" useHttpOnly="true">
-              <Valve className="org.apache.catalina.valves.StuckThreadDetectionValve" threshold="60"/>
-            </Context>
-          </Host>
-        </Engine>
+                   scheme="https" secure="true" proxyName="mouthmelt.com" proxyPort="443"/>-->
+    <Engine name="Standalone" defaultHost="localhost">
+      <Host name="localhost" appBase="webapps" unpackWARs="true" autoDeploy="false" startStopThreads="4">
+        <Context path="" docBase="../confluence"  debug="0" reloadable="false" useHttpOnly="true" >
+          <Manager pathname=""/>
+          <Valve className="org.apache.catalina.valves.StuckThreadDetectionValve" threshold="60"/>
+        </Context>
+        <Context path="${confluence.context.path}/synchrony-proxy" docBase="../synchrony-proxy" reloadable="false" >
+          <Valve className="org.apache.catalina.valves.StuckThreadDetectionValve" threshold="60"/>
+        </Context>
+      </Host>
+    </Engine>
   </Service>
 </Server>
 EOF
@@ -45,10 +45,17 @@ EOF
 
 
 创建configmap
+kubectl delete configmap tomcat-config
 kubectl create configmap tomcat-config --from-file=/root/atlassian/confluence/server.xml
 
 
+
+
 开始构建镜像
+
+
+vim ~/atlassian/Dockerfile
+cd ~/atlassian/
 docker build -t wolihi/java-confluence-wiki:v7.9.0 .
 docker push wolihi/java-confluence-wiki:v7.9.0
 如果是lastest就构建latest
@@ -90,8 +97,8 @@ https://mouthmelt.com
 cd ~/atlassian/
 java -jar atlassian-agent.jar \
    -d -m darkernode@gmail.com -n BAT \
-   -p conf -o http://10.1.135.25:8090 \
- -s B4SE-LFQJ-5L4Y-R2LW
+   -p conf -o http://10.1.135.30:8090 \
+ -s B9O2-R32P-YULT-D846
 
 复制密钥:
 AAABow0ODAoPeJyNUl2PmzAQfOdXIPXZHCbhrhcJ6RJAKiqQqnCnvjqwCb6CjdYmbfrrawKn3kcUV

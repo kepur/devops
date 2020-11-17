@@ -17,23 +17,14 @@ spec:
         image: wolihi/php-payment-office:v1.0
         imagePullPolicy: Always
         ports:
-        - containerPort: 7789
-        env:
-        - name: REVISION
-          value: v1.0
-        - name: db_username
-          value: "root"
-        - name: db_host
-          value: "mysql-master-svc"
-          #value: "mysql"
-        - name: db_port
-          value: "3306"
-        - name: db_name
-          value: "php-payment-office"
-        - name: db_password
-          valueFrom:
-            secretKeyRef:
-              name: mysql-secret
-              key: password
-      #imagePullSecrets:
-      #- name: wangdi-docker-password
+        - containerPort: 9000
+        volumeMounts:
+        - name: payment-data
+          mountPath: /usr/share/nginx/html
+        # - name: config-volume
+        #   mountPath: /opt/atlassian/confluence/conf/server.xml
+        #   subPath: .xml
+      volumes:
+      - name: payment-data
+        persistentVolumeClaim:
+          claimName: php-payment-pvc
