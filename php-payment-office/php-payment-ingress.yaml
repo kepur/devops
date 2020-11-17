@@ -14,12 +14,12 @@ spec:
       paths:
       - backend:
           serviceName: php-payment-office-svc
-          servicePort: 7789
+          servicePort: 9000
         path: /
   - host: frutrops.com
     http:
       paths:
       - backend:
           serviceName: php-payment-office-svc
-          servicePort: 7789
+          servicePort: 9000
         path: /
