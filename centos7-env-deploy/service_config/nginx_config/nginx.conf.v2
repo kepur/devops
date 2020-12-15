@@ -1,0 +1,138 @@
+#user  nobody;
+worker_processes  4;
+
+error_log  logs/error.log  notice;
+pid        logs/nginx.pid;
+
+events {
+    worker_connections 1024;
+}
+
+http {
+
+	include       mime.types;
+	include mobile.useragent;
+    default_type  application/octet-stream;
+	
+	map $http_x_forwarded_for  $clientRealIp {
+		""	$remote_addr;
+		~^(?P<firstAddr>[0-9\.]+),?.*$	$firstAddr;
+	}
+	
+	geo $clientRealIp $ip_whitelist { #在这里设置 IP 白名单
+        default 0;
+        130.105.241.28 	1;
+        121.127.13.194 	1;
+		121.127.7.138	1;
+		121.127.7.139	1;
+		180.232.70.66	1;
+		180.232.70.67 	1;
+        35.201.172.60	1; #PTSW Test
+		35.189.183.214	1; #PTSW Test
+		35.189.182.107	1; #PTSW Test
+		104.199.151.122	1; #PTSW Test
+		61.216.101.229	1; #PTSW Test
+		10.24.0.0/16 1; #PTSW Test
+		60.244.116.230 1; #PG Test
+		183.182.13.68 1; #GG Test
+		183.182.13.67 1; #GG Test
+		183.182.13.84 1; #GG Test
+		183.182.13.196 1; #GG Test
+		119.23.213.204 1; #JHPay Test
+    }
+
+
+	#代理推广日志专用
+	log_format  main  '$clientRealIp $remote_user [$time_local] "$request" $http_host '
+			'$status $upstream_status $body_bytes_sent "$http_referer"'
+			'"$http_user_agent” $upstream_addr $request_time ';
+
+	###################### upstream config ###############################
+	##pc web upstream 
+	upstream pcweb.http.upstream {
+		server 127.0.0.1:8080;
+	}
+
+	##pc websocket upstream
+	upstream pcweb.websocket.upstream {
+		server 127.0.0.1:29157;
+	}
+
+
+	##game api upstream 
+	upstream gameapi.http.upstream {
+		server 127.0.0.1:8081;
+	}	
+	
+	##pay api upstream 
+	upstream pay.http.upstream {
+		server 127.0.0.1:8083;
+	}
+	
+	##backend api upstream 
+	upstream backend.http.upstream {
+		server 127.0.0.1:8084;
+	}
+	###################### upstream config ###############################
+
+    sendfile        on;
+    server_tokens 	off;
+    keepalive_timeout 75;
+    server_names_hash_bucket_size 128;
+    client_header_buffer_size 128k;
+    large_client_header_buffers 4 128k;
+    server_name_in_redirect off;
+    client_max_body_size 10m;
+    client_body_buffer_size 128k;
+    tcp_nopush     on;
+    tcp_nodelay    on;
+
+    gzip  on;                        
+    gzip_min_length 1k;              
+    gzip_buffers 4 16k;
+    gzip_http_version 1.1;
+    gzip_comp_level 3;
+    gzip_disable "MSIE [1-6].";
+    gzip_types text/plain application/x-javascript text/css text/xml application/xml image/jpeg image/gif image/png;
+    gzip_vary on;
+    gzip_proxied any;
+
+    proxy_http_version 1.1;
+    proxy_redirect off;
+    proxy_connect_timeout 300;       
+    proxy_send_timeout 300;       
+    proxy_read_timeout 300;           
+    proxy_buffer_size 16k;          
+    proxy_buffers 6 64k;            
+    proxy_busy_buffers_size 128k;    
+    proxy_temp_file_write_size 64k; 
+    proxy_set_header   Host  $host;
+    proxy_set_header   X-Real-IP  $clientRealIp;
+    proxy_set_header   X-Forwarded-For  $proxy_add_x_forwarded_for;
+	proxy_set_header   X-Forwarded-Protocol  $scheme;
+    open_file_cache max=204800 inactive=20s;
+    open_file_cache_min_uses 1;
+    open_file_cache_valid 60s;
+
+
+	##################server default_server ###########
+    server {
+		listen 80 default_server;
+		server_name _;
+		access_log logs/undefined_access.log main;
+		error_log  /dev/null crit;
+		return 301 http://www.baidu.com;
+    }
+
+	################## PC Web Server ###################
+	include pcweb.server.conf;
+	
+	################## Game Api Server ###################
+	include gameapi.server.conf;
+
+	################## Pay Api Server ###################
+	include pay.server.conf;
+
+	################## Backend Server ###################
+	include backend.server.conf;		
+}

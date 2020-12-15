@@ -1,0 +1,38 @@
+server {
+		listen	80;
+        listen  443;
+        server_name  www.2212kk.com;
+
+        #charset koi8-r;
+
+        #access_log  logs/host.access.log  main;
+		
+		location / {
+            root /home/xunhuan/www/mobile;
+            try_files $uri $uri/ @router;
+            index index.html;
+        }
+
+        error_page 500 502 503 504 /50x.html;
+            location = /50x.html {
+            root html;
+        }
+        location @router {
+            rewrite ^.*$ /index.html last;
+        }
+       location ~ /files/ {
+            root   /home/xunhuan/www;
+            index  home.html index.html index.htm;
+        }
+
+        location ~ /app/ {
+         rewrite ^/(.*)$ /$1 break;
+         proxy_pass https://127.0.0.1:8078;    
+        }
+		
+	    location ~ /amuse/ {
+         rewrite ^/(.*)$ /$1 break;
+         proxy_pass https://127.0.0.1:8078;    
+        }
+        
+    }

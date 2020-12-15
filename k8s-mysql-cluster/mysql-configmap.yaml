@@ -17,11 +17,12 @@ data:
     collation-server=utf8mb4_unicode_ci
     init_connect='SET NAMES utf8mb4'
     default-storage-engine=INNODB
+    innodb_log_file_size = 10G
+    transaction-isolation=READ-COMMITTED
+    max_allowed_packet = 256M
     [mysql]
     default-character-set=utf8mb4
-    innodb_log_file_size = 512M
-    max_allowed_packet = 256M
-    transaction-isolation=READ-COMMITTED
+
     binlog_format=row
   slave.cnf: |
     # Apply this config only on slaves.
@@ -39,6 +40,7 @@ data:
     default-storage-engine=INNODB
     transaction-isolation=READ-COMMITTED
     binlog_format=row
+    innodb_log_file_size = 10G
     [mysql]
     default-character-set=utf8mb4
     innodb_log_file_size = 512M

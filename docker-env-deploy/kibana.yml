@@ -1,0 +1,7 @@
+server.port: 5601
+server.host: "0.0.0.0"
+elasticsearch.hosts: ["http://172.17.0.4:9200"]
+# 操作界面语言设置为中文
+i18n.locale: "zh-CN"
+elasticsearch.username: 'kibana'
+elasticsearch.password: 'Aa123.com'

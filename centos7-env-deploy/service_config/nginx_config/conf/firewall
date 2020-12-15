@@ -1,0 +1,15 @@
+#!/bin/bash
+iptables -I INPUT -s 0.0.0.0/0 -j DROP
+iptables -I INPUT -s 127.0.0.1 -j ACCEPT #lo
+iptables -I INPUT -s 103.232.87.218 -j ACCEPT #da
+iptables -I INPUT -s 114.108.239.4 -j ACCEPT #fei
+iptables -I INPUT -s 211.104.175.112 -j ACCEPT #vpn
+iptables -I INPUT -s 43.248.9.82 -j ACCEPT  #xiang
+iptables -I INPUT -s 112.199.93.34 -j ACCEPT  #office
+iptables -I INPUT -s 45.116.176.124 -j ACCEPT #hos
+iptables -I INPUT -s 103.232.87.216 -j ACCEPT #you
+iptables -I INPUT -s 112.211.19.37 -j ACCEPT #pldt
+iptables -I INPUT -s 8.8.8.8 -j ACCEPT #DNS
+iptables -I INPUT -s 8.8.4.4 -j ACCEPT #DNS2
+iptables -I INPUT -s smtp.bestedm.org -j ACCEPT #email
+iptables -I INPUT -s sms-api.luosimao.com -j ACCEPT #sms

@@ -6,8 +6,8 @@ spec:
   storageClassName: php-payment-storage
   accessModes:
   #需要使用和PV 一致的访问方式
-  - ReadWriteOnce
+  - ReadWriteMany 
   #按需分配资源
   resources:
     requests:
-      storage: 2Gi
+      storage: 5Gi

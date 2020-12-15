@@ -1,0 +1,19 @@
+MAILTO=""
+#nginx日志切割
+0 0 */1 * * sh /opt/nginx/logs/logs.sh
+#ntp时间同步
+1 1 */1 * * /usr/sbin/ntpdate asia.pool.ntp.org
+#mysql数据库备份
+#20 9 */1 * * /etc/shell/mysqlbackup
+#mysql日志切割
+#30 7 */1 * * sh /opt/sqllog/sqllog.sh
+#抓取电竞数据
+*/10  * * * *  /usr/local/php/bin/php /data/wwwroot/electronic_sports/www/cli.php discardSchedule release
+#程序计划任务
+1 1 */1 * * /usr/sbin/ntpdate asia.pool.ntp.org
+1 0,1,6,12 * * * /usr/local/php/bin/php /data/wwwroot/self_pay/www/cli.php report release
+1 0,1,6,12 * * * /usr/local/php/bin/php /data/wwwroot/self_pay/www_zf2860/cli.php report
+0 */1 * * * /usr/local/php/bin/php /data/wwwroot/self_pay/www_zf2860/cli.php merchantConvertRate
+0 7 * * * /usr/local/php/bin/php /data/wwwroot/self_pay/www_zf2860/cli.php merchantConvertRateOld
+*/5 * * * * /usr/local/php/bin/php /data/wwwroot/self_pay/www_zf2860/cli.php calculateBalance
+1 5 * * *  service php-fpm restart

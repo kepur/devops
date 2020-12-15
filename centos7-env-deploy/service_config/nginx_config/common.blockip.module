@@ -1,0 +1,5 @@
+if ($clientRealIp ~* "121.42.0.19") {
+  # return 200 'This ip not allow vist our website Plz contact administrator ';
+   return 403;
+   break;
+}

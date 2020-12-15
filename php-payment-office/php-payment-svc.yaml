@@ -4,10 +4,12 @@ metadata:
   name: php-payment-office-svc
   namespace: default
 spec:
+  type: NodePort
   ports:
   - name: port
     port: 9000
     protocol: TCP
     targetPort: 9000
+    nodePort: 30433
   selector:
     app: php-payment-office

@@ -1,0 +1,31 @@
+[root@backserver ~]# iptables -nL
+Chain INPUT (policy ACCEPT)
+target     prot opt source               destination         
+ACCEPT     all  --  211.104.175.112      0.0.0.0/0           
+ACCEPT     all  --  101.227.214.144      0.0.0.0/0           
+ACCEPT     all  --  101.227.214.143      0.0.0.0/0           
+ACCEPT     all  --  112.211.19.37        0.0.0.0/0           
+ACCEPT     all  --  112.199.93.34        0.0.0.0/0           
+ACCEPT     all  --  49.146.172.178       0.0.0.0/0           
+ACCEPT     all  --  49.146.180.212       0.0.0.0/0           
+ACCEPT     all  --  114.108.239.4        0.0.0.0/0           
+ACCEPT     all  --  49.146.182.34        0.0.0.0/0           
+ACCEPT     all  --  222.73.124.240       0.0.0.0/0           
+ACCEPT     all  --  202.103.191.61       0.0.0.0/0           
+ACCEPT     all  --  8.8.4.4              0.0.0.0/0           
+ACCEPT     all  --  8.8.8.8              0.0.0.0/0           
+ACCEPT     all  --  103.232.87.216       0.0.0.0/0           
+ACCEPT     all  --  45.116.176.124       0.0.0.0/0           
+ACCEPT     all  --  43.248.9.82          0.0.0.0/0           
+ACCEPT     all  --  182.18.214.80        0.0.0.0/0           
+ACCEPT     all  --  103.232.87.218       0.0.0.0/0           
+ACCEPT     all  --  127.0.0.1            0.0.0.0/0           
+DROP       all  --  0.0.0.0/0            0.0.0.0/0           
+ACCEPT     all  --  210.91.40.114        0.0.0.0/0           
+
+Chain FORWARD (policy ACCEPT)
+target     prot opt source               destination         
+
+Chain OUTPUT (policy ACCEPT)
+target     prot opt source               destination         
+[root@backserver ~]# 

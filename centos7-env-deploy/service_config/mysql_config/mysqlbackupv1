@@ -1,0 +1,32 @@
+#!/bin/bash
+db="electronic_sports 
+app_es_user
+self_app_pay
+self_app_pay_8cpays
+self_app_pay_jc8pay
+self_app_pay_ydpay8
+self_app_pay_zf2860
+self_app_pay_zhkj2019
+self_pay
+self_pay_8cpays
+self_pay_jc8pay
+self_pay_ydpay8
+self_pay_zf2860
+self_pay_zhkj2019
+self_qrpay                                      
+self_qrpay_8cpays
+self_qrpay_jc8pay
+self_qrpay_ydpay8
+self_qrpay_zf2860
+self_qrpay_zhkj2019"
+for aff in $db;
+do
+cd /home/mysql/backup
+/usr/bin/mysqldump -udianjin898 -h127.0.0.1 -psolarisdianjinof13dsf\#s7 $aff --ignore-table=sincai_passport.adminlog --ignore-table=sincai_passport.userlog  --ignore-table=sincai_hgame.issuehistory  --ignore-table=sincai_hgame.userlog  > /home/mysql/backup/$aff$(date +%m_%d_%H).sql
+        if  [[ $? == 0 ]]
+                then
+tar zcvf $aff$(date +%m_%d_%H).tar.gz $aff$(date +%m_%d_*).sql
+rm -rf /home/mysql/backup/*.sql
+find /home/mysql/backup -ctime +5|xargs -i  rm -rf {}
+fi
+done

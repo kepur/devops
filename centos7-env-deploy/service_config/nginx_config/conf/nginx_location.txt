@@ -1,0 +1,4 @@
+location ~ /phpmyadmin/.+\.php$ {
+if ($fastcgi_script_name ~ /phpmyadmin/(.+\.php.*)$) {
+set $valid_fastcgi_script_name $1;
+}

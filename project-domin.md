@@ -1,4 +1,6 @@
-module-name              prot        domain-name
+| module-name | prot |  domain-name |
+| ---- | ---- | ---- | ---- |
+
 flask-news-office        7783             http://smokitoba.com
 flask-blogdemo-web       7790             http://cornwalldev.com
 flask-nowstragram-web    7781             http://saraluce.com
@@ -53,3 +55,14 @@ cd ~/devops/flask-pronsearch-web/
 kubectl create -f flask-pronsearch-deployment.yaml
 kubectl create -f flask-pronsearch-svc.yaml
 kubectl create -f flask-pronsearch-ingress.yaml
+
+网赚平台(VUE 练习)
+fafa188.com
+defa98.com
+fafa12.com
+
+视频站
+
+博客站
+
+

@@ -1,0 +1,15 @@
+ map $http_user_agent $mobile {
+     default         0;
+     ~*iPhone        1;
+     ~*iPad          1;
+     ~*iPod          1;
+     ~*Android	      1;
+     ~*Mobile        1;
+     ~*Phone         1;
+     ~*BlackBerry    1;
+     ~*Nokia         1;
+     ~*KFAPWI        1;
+     ~*PlayBook      1;
+     ~*BB10          1;
+ }
+

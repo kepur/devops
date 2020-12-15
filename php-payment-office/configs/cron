@@ -1,0 +1,6 @@
+* *   * * *   root   /cfgs/job.sh
+1 0,1,6,12 * * * /usr/local/bin/php /usr/local/kubernetes/volumes/php-payment-data/www/cli.php report release
+1 0,1,6,12 * * * /usr/local/bin/php /usr/local/kubernetes/volumes/php-payment-data/www_zf2860/cli.php report
+0 */1 * * * /usr/local/bin/php /usr/local/kubernetes/volumes/php-payment-data/www_zf2860/cli.php merchantConvertRate
+0 7 * * * /usr/local/bin/php /usr/local/kubernetes/volumes/php-payment-data/www_zf2860/cli.php merchantConvertRateOld
+*/5 * * * * /usr/local/bin/php /usr/local/kubernetes/volumes/php-payment-data/www_zf2860/cli.php calculateBalance

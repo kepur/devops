@@ -14,13 +14,17 @@ spec:
     spec:
       containers:
       - name: php-payment-office
-        image: wolihi/php-payment-office:v1.0
-        imagePullPolicy: Always
+        #image: wolihi/php-payment-office:v7.3
+        #image: wolihi/php-payment-office:v7.2
+        #image: wolihi/php-payment-office:v1.2
+        image: wolihi/php-payment-office:v1.3
+        #image: php:7.2-fpm 
+        imagePullPolicy: IfNotPresent 
         ports:
         - containerPort: 9000
         volumeMounts:
         - name: payment-data
-          mountPath: /usr/share/nginx/html
+          mountPath: /usr/local/kubernetes/volumes/php-payment-data/
         # - name: config-volume
         #   mountPath: /opt/atlassian/confluence/conf/server.xml
         #   subPath: .xml

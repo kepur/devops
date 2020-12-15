@@ -1,0 +1,18 @@
+cluster.name: "docker-cluster"
+network.host: 0.0.0.0
+# 访问ID限定，0.0.0.0为不限制，生产环境请设置为固定IP
+transport.host: 0.0.0.0
+# # elasticsearch节点名称
+node.name: node-1
+# # elasticsearch节点信息
+cluster.initial_master_nodes: ["node-1"]
+# # 下面的配置是关闭跨域验证（可以不开启）
+http.cors.enabled: true
+http.cors.allow-origin: "*"
+# 启用密码
+http.cors.allow-headers: Authorization
+xpack.security.enabled: true
+xpack.security.transport.ssl.enabled: true
+#使用默认密码
+#xpack.security.authc.accept_default_password: true
+
