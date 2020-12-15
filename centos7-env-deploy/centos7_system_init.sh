@@ -17,7 +17,7 @@ do
         "4.")
             break
             ;;
-        *) echo "invalid option $REPLY";;
+        *) echo "invalid option ";;
     esac
 done
 system_init(){
