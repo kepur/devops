@@ -1,4 +1,23 @@
 #!/bin/bash
+select opt in "${options[@]}"
+do
+    case $opt in
+        "1.系统初始化下载文件")
+            echo "you chose choice 1"
+            ;;
+        "2.下载openssl")
+            echo "you chose choice 2"
+			download_file
+            ;;
+        "3.安装openssl")
+			openssl_install
+            ;;
+        "4.")
+            break
+            ;;
+        *) echo "invalid option $REPLY";;
+    esac
+done
 system_init(){
 	yum update -y && yum install gcc pcre pcre-devel zlib-devel openssl perl openssl-devel -y
   	clear
@@ -13,6 +32,7 @@ system_init(){
 	echo " 初始化安装请确保网络通畅DNS解析正常......" && sleep 2s
 }
 download_file(){
+	cd /opt/
 	#wget https://www.openssl.org/source/openssl-1.1.1g.tar.gz
 	openssl="openssl-1.1.1g.tar.gz"
     local download_root_url="https://www.openssl.org/source/"
@@ -28,7 +48,9 @@ download_file(){
         fi
 	fi
 }
+
 openssl_install(){
+	cd /opt/
 	echo "正在执行openssl安装"
 	tar -zxvf openssl-1.1.1g.tar.gz
 	cd openssl-1.1.1g
