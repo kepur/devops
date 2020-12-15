@@ -1,5 +1,6 @@
 #!/bin/bash
 export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+options=("Option 1" "Option 2" "Option 3" "Quit")
 select opt in "${options[@]}"
 do
     case $opt in

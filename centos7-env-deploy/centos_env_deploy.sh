@@ -54,12 +54,12 @@ get_os_info(){
     echo 
     echo "########################################"
 }
-
+options=("Option 1" "Option 2" "Option 3" "Quit")
 select opt in "${options[@]}"
 do
     case $opt in
-        "1.系统初始化")
-            echo "you chose choice 1"
+        "1.系统初始化安装")
+            echo "系统初始化"
             ;;
         "2.内核参数优化")
             echo "you chose choice 2"
