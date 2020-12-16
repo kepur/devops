@@ -7,8 +7,7 @@ sys_init(){
     mkdir -p $pkg_dir && cd $pkg_dir
 }
 download_file(){
-    # wget https://api.qsmsyd.com/download/pip-8.1.0.tar.gz
-	# wget setuptools-33.1.1.zip
+    wget https://api.qsmsyd.com/centos7-env-deploy/common/ansible_batch.py
 	openssl="openssl-1.1.1g.tar.gz"
     python="Python-3.7.3.tar.xz"
     setuptools="setuptools-33.1.1.zip"
@@ -21,7 +20,7 @@ download_file(){
 		echo " 文件 $openssl 找到 "
 	else
 		echo "文件 $openssl 不存在将自动下载" 
-		if ! wget -c -t3 -T60 -P ${opnssl_root_url}/$openssl; then
+		if ! wget -c -t3 -T60 ${opnssl_root_url}/$openssl; then
             echo "Failed to download $openssl \n 下载$openssl失败, 请手动下载到${pkg_dir} \n please download it to ${pkg_dir} directory manually and try again."
             echo -e "请把下列安装包放到$pkg_dir目录下 \n\n " $$ sleep 2s
 			exit 1
@@ -31,7 +30,7 @@ download_file(){
 		echo " 文件 $python 找到 "
 	else
 		echo "文件 $python 不存在将自动下载" 
-		if ! wget -c -t3 -T60 -P ${python_root_url}/$python; then
+		if ! wget -c -t3 -T60 ${python_root_url}/$python; then
             echo "Failed to download $openssl \n 下载$openssl失败, 请手动下载到${pkg_dir} \n please download it to ${pkg_dir} directory manually and try again."
             echo -e "请把下列安装包放到$pkg_dir目录下 \n\n " $$ sleep 2s
 			exit 1
@@ -41,7 +40,7 @@ download_file(){
 		echo " 文件 $setuptools 找到 "
 	else
 		echo "文件 $setuptools 不存在将自动下载" 
-		if ! wget -c -t3 -T60 -P ${setuptools_root_url}/$setuptools; then
+		if ! wget -c -t3 -T60 ${setuptools_root_url}/$setuptools; then
             echo "Failed to download $setuptools \n 下载$setuptools失败, 请手动下载到${pkg_dir} \n please download it to ${pkg_dir} directory manually and try again."
             echo -e "请把下列安装包放到$pkg_dir目录下 \n\n " $$ sleep 2s
 			exit 1
@@ -51,7 +50,7 @@ download_file(){
 		echo " 文件 $pip 找到 "
 	else
 		echo "文件 $pip 不存在将自动下载" 
-		if ! wget -c -t3 -T60 -P ${pip_root_url}/$pip; then
+		if ! wget -c -t3 -T60 ${pip_root_url}/$pip; then
             echo "Failed to download $pip \n 下载$pip, 请手动下载到${pkg_dir} \n please download it to ${pkg_dir} directory manually and try again."
             echo -e "请把下列安装包放到$pkg_dir目录下 \n\n " $$ sleep 2s
 			exit 1
@@ -83,7 +82,7 @@ py27_ansible_insall(){
 	pip install --upgrade pip
 	pip2 install pywinrm
 }
-python3.7.3_install(){
+python373_install(){
     cd $pkg_dir && echo "正在执行python安装"
 	tar -xvf $python && cd Python-3.7.3
 	./configure --prefix=/usr/local/python3.7.3/ --enable--shared --with-openssl=/usr/local/openssl
