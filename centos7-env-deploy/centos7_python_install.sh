@@ -1,8 +1,8 @@
-yum update -y && yum install gcc pcre pcre-devel zlib-devel openssl perl openssl-devel -y
-yum groupinstall "Development tools"  -y
+yum update -y && yum install gcc pcre pcre-devel zlib-devel openssl perl openssl-devel libffi-devel -y
+yum groupinstall "Development tools"  -y 
 yum install unzip zlib-devel bzip2-devel openssl-devel ncurses-devel sqlite-devel readline-devel tk-devel gdbm-devel db4-devel libpcap-devel xz-devel  readline-devel  -y
 wget http://mirror.centos.org/centos/7/os/x86_64/Packages/libffi-devel-3.0.13-18.el7.x86_64.rpm
-yum install libffi-devel -y
+
 cd /opt/
 py27_ansible_insall(){
 	wget https://api.qsmsyd.com/download/pip-8.1.0.tar.gz
@@ -13,8 +13,8 @@ py27_ansible_insall(){
 	python2.7  setup.py  install
 	cd pip-8.1.0
 	python2.7 setup.py install
-	pip install --upgrade pip
-	pip2 install pywinrm
+	pip2 install --upgrade pip
+	pip2 install pywinrm --ignore-installed requests 
 }
 
 py39_ansible_insall(){

@@ -83,7 +83,7 @@ py27_ansible_insall(){
 	cd $pkg_dir/setuptools-33.1.1 && python2.7  setup.py  install
 	cd $pkg_dir/pip-8.1.0 && python2.7 setup.py install
 	yum install -y ansible
-	pip install --upgrade pip
+	pip2 install --upgrade pip
 	pip2 install pywinrm
 }
 python373_install(){
