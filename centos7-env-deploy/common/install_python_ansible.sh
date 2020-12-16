@@ -96,5 +96,41 @@ python373_install(){
 	sed -i 's/python/python2/g' /usr/bin/yum
 	sed -i 's/python/python2/g' /usr/libexec/urlgrabber-ext-down
 }
-sys_init
-download_file
+
+function menu {
+clear 
+echo
+echo -e "\t0. 系统初始化"
+echo -e "\t1. 下载文件"
+echo -e "\t2. 安装openssl" 
+echo -e "\t3. 安装py27_ansible" 
+echo -e "\t4. 安装python3.7.3" 
+echo -e "\t0. Exit menu\n\n"
+#-en 选项会去掉末尾的换行符，这让菜单看起来更专业一些
+echo -en "\t\tEnter option:" 
+#read 命令读取用户输入
+read -n 1 option
+}
+while [ 1 ]
+do 
+    menu
+    case $option in
+    0)
+        break ;;
+    1)
+        sys_init  ;;
+    2)
+        download_file ;;
+    3)
+        openssl_install ;;
+	4)
+        py27_ansible_insall ;;
+	5)
+        python373_install ;;
+    *)
+        clear
+        echo "sorry,wrong selection" ;;
+    esac
+    echo -en "\n\n\t\thit any to contunue"
+    read -n 1 line
+done
