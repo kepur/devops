@@ -1,17 +1,20 @@
 #!/bin/sh
-pkg_dir=/opt/pkg_dir
+
 sys_init(){
     yum update -y && yum install gcc pcre pcre-devel zlib-devel openssl perl openssl-devel libffi-devel -y
     yum groupinstall "Development tools"  -y 
     yum install unzip zlib-devel bzip2-devel openssl-devel ncurses-devel sqlite-devel readline-devel tk-devel gdbm-devel db4-devel libpcap-devel xz-devel  readline-devel  -y
     mkdir -p $pkg_dir && cd $pkg_dir
 }
+
+pkg_dir=/opt/pkg_dir
+openssl="openssl-1.1.1g.tar.gz"
+python="Python-3.7.3.tar.xz"
+setuptools="setuptools-33.1.1.zip"
+pip="pip-8.1.0.tar.gz"
+
 download_file(){
     wget https://api.qsmsyd.com/centos7-env-deploy/common/ansible_batch.py
-	openssl="openssl-1.1.1g.tar.gz"
-    python="Python-3.7.3.tar.xz"
-    setuptools="setuptools-33.1.1.zip"
-    pip="pip-8.1.0.tar.gz"
     local opnssl_root_url="https://www.openssl.org/source/"
     local python_root_url="https://www.python.org/ftp/python/3.7.3/"
     local setuptools_root_url="https://api.qsmsyd.com/download/"
@@ -75,8 +78,8 @@ openssl_install(){
 }
 py27_ansible_insall(){
     cd $pkg_dir && echo "正在执行ansible安装"
-	unzip $setuptools
-	tar -zxvf $pip
+	unzip $pkg_dir/$setuptools -d $pkg_dir
+	tar -zxvf $pkg_dir/$pip -C $pkg_dir
 	cd $pkg_dir/setuptools-33.1.1 && python2.7  setup.py  install
 	cd $pkg_dir/pip-8.1.0 && python2.7 setup.py install
 	pip install --upgrade pip
