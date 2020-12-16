@@ -100,11 +100,12 @@ python373_install(){
 function menu {
 clear 
 echo
-echo -e "\t0. 系统初始化"
-echo -e "\t1. 下载文件"
-echo -e "\t2. 安装openssl" 
-echo -e "\t3. 安装py27_ansible" 
-echo -e "\t4. 安装python3.7.3" 
+echo -e "\t\t\t. Centos7 python ansible安装脚本"
+echo -e "\t1. 系统初始化"
+echo -e "\t2. 下载文件"
+echo -e "\t3. 安装openssl" 
+echo -e "\t4. 安装py27_ansible" 
+echo -e "\t5. 安装python3.7.3" 
 echo -e "\t0. Exit menu\n\n"
 #-en 选项会去掉末尾的换行符，这让菜单看起来更专业一些
 echo -en "\t\tEnter option:" 
