@@ -76,8 +76,8 @@ openssl_install(){
 py27_ansible_insall(){
     cd $pkg_dir && echo "正在执行ansible安装"
 	unzip $setuptools
-	tar zxvf $pip
-	cd setuptools-33.1.1 && python2.7  setup.py  install
+	tar -zxvf $pip
+	cd $pkg_dir/setuptools-33.1.1 && python2.7  setup.py  install
 	cd $pkg_dir/pip-8.1.0 && python2.7 setup.py install
 	pip install --upgrade pip
 	pip2 install pywinrm
