@@ -10,7 +10,7 @@ def create_ansible_inventory(windows_username,windows_passwd,ansible_port,ansibl
                 f2.write('[{}:vars]\n'.format(ansible_group))
                 f2.write('ansible_ssh_user = {}\n'.format(windows_username))
                 f2.write('ansible_ssh_pass={}\n'.format(windows_passwd))
-                f2.write('ansible_connection=winrm\nansible_winrm_transport: ntlm\n')
+                f2.write('ansible_connection=winrm\nansible_winrm_transport=ntlm\n')
                 f2.write('ansible_ssh_port = {}\n'.format(ansible_port))
                 f2.write('ansible_winrm_server_cert_validation = ignore\n')
                 group_name= '[{}]\n'.format(ansible_group)
