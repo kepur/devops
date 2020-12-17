@@ -5,10 +5,12 @@ def winrm_service_check(name,ip,port):
     try:
         service.open(ip,port)
         with open("winrm_service_check.txt",'a',encoding='utf-8') as out_file:
-            out_file.write('卡机:{} ip:{} 服务检测通过 \n',)
+            out_file.write('卡机:{} ip:{} 服务检测通过 Success\n'.format(name,ip))
+            print('"\033[32m卡机:{} ip:{} 服务检测通过 Success\033[0m"  \n'.format(name,ip))
     except Exception as err:
         with open("winrm_service_check.txt",'a',encoding='utf-8') as out_file:
-            out_file.write('卡机:{} ip:{} 服务检测为通过 False\n',)
+            out_file.write('卡机:{} ip:{} 服务检测失败 False\n'.format(name,ip))
+            print('\033[33m卡机:{} ip:{} 服务检测失败 False\033[0m \n'.format(name,ip))
     finally:
         service.close()
 
@@ -67,7 +69,7 @@ def create_playbook(playbook_name,host_group,batchfile):
             for loginfo in res.splitlines():
                 f4.writelines(loginfo+'\n')
                 if 'ok' in loginfo:
-                    print("\033[33m{}\033[0m".format(loginfo))
+                    print("\033[32m{}\033[0m".format(loginfo))
 
     except Exception as e:
         print('请先创建play-book 和 inventory文件:%s'%e)
