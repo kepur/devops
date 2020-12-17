@@ -1,5 +1,5 @@
 import os,telnetlib
-#
+#winrm服务检查
 def winrm_service_check(name,ip,port):
     service=telnetlib.Telnet()
     try:
@@ -13,6 +13,7 @@ def winrm_service_check(name,ip,port):
             print('\033[33m卡机:{} ip:{} 服务检测失败 False\033[0m \n'.format(name,ip))
     finally:
         service.close()
+
 
 #创建inventory
 def create_ansible_inventory(windows_username,windows_passwd,ansible_port,ansible_group,server_list_file):
@@ -43,11 +44,10 @@ def create_ansible_inventory(windows_username,windows_passwd,ansible_port,ansibl
                     client = '''%s ansible_ssh_host=%s\n''' % (name,ip)
                     f2.write(client)
                     winrm_service_check(name,ip,ansible_port)
-                print('#成功创建inventory')
+                print('#成功创建inventory,资产ansible服务检查日志为:winrm_service_check.txt')
 
     except:
         print("请把:{}文件放到当前目录下".format(server_list_file))
-
 
 
 #创建并执行playbook
@@ -65,7 +65,7 @@ def create_playbook(playbook_name,host_group,batchfile):
         result =os.popen('ansible-playbook {}-playbook.yml -i inventory -vvv'.format(playbook_name))
         res = result.read()
         with open('{}.log'.format(playbook_name),mode='a') as f4:
-            print("请查看日志:"'{}.log'.format(playbook_name))
+            print("详情请查查看日志:"'{}.log'.format(playbook_name))
             for loginfo in res.splitlines():
                 f4.writelines(loginfo+'\n')
                 if 'ok' in loginfo:
