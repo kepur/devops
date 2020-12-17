@@ -1,4 +1,17 @@
-import os
+import os,telnetlib
+#
+def winrm_service_check(name,ip,port):
+    service=telnetlib.Telnet()
+    try:
+        service.open(ip,port)
+        with open("winrm_service_check.txt",'a',encoding='utf-8') as out_file:
+            out_file.write('卡机:{} ip:{} 服务检测通过 \n',)
+    except Exception as err:
+        with open("winrm_service_check.txt",'a',encoding='utf-8') as out_file:
+            out_file.write('卡机:{} ip:{} 服务检测为通过 False\n',)
+    finally:
+        service.close()
+
 #创建inventory
 def create_ansible_inventory(windows_username,windows_passwd,ansible_port,ansible_group,server_list_file):
     try:
@@ -10,7 +23,7 @@ def create_ansible_inventory(windows_username,windows_passwd,ansible_port,ansibl
                 f2.write('[{}:vars]\n'.format(ansible_group))
                 f2.write('ansible_ssh_user = {}\n'.format(windows_username))
                 f2.write('ansible_ssh_pass={}\n'.format(windows_passwd))
-                f2.write('ansible_connection=winrm\nansible_winrm_transport=ntlm\n')
+                f2.write('ansible_connection=winrm\n')
                 f2.write('ansible_ssh_port = {}\n'.format(ansible_port))
                 f2.write('ansible_winrm_server_cert_validation = ignore\n')
                 group_name= '[{}]\n'.format(ansible_group)
@@ -27,10 +40,12 @@ def create_ansible_inventory(windows_username,windows_passwd,ansible_port,ansibl
                         continue
                     client = '''%s ansible_ssh_host=%s\n''' % (name,ip)
                     f2.write(client)
+                    winrm_service_check(name,ip,ansible_port)
                 print('#成功创建inventory')
 
     except:
         print("请把:{}文件放到当前目录下".format(server_list_file))
+
 
 
 #创建并执行playbook
