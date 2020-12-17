@@ -10,7 +10,7 @@ def create_ansible_inventory(windows_username,windows_passwd,ansible_port,ansibl
                 f2.write('[{}:vars]\n'.format(ansible_group))
                 f2.write('ansible_ssh_user = {}\n'.format(windows_username))
                 f2.write('ansible_ssh_pass={}\n'.format(windows_passwd))
-                f2.write('ansible_connection=winrm\n')
+                f2.write('ansible_connection=winrm\nansible_winrm_transport: ntlm\n')
                 f2.write('ansible_ssh_port = {}\n'.format(ansible_port))
                 f2.write('ansible_winrm_server_cert_validation = ignore\n')
                 group_name= '[{}]\n'.format(ansible_group)
@@ -45,7 +45,7 @@ def create_playbook(playbook_name,host_group,batchfile):
             f3.write('   - debug: var={}\n'.format(playbook_name))
             f3.write('   - name: 查看ip\n     raw : ipconfig\n     register: ipconfig\n')
             f3.write('   - debug : var=ipconfig\n')
-        result =os.popen('ansible-playbook {}-playbook.yml -i inventory'.format(playbook_name))
+        result =os.popen('ansible-playbook {}-playbook.yml -i inventory -vvv'.format(playbook_name))
         res = result.read()
         with open('{}.log'.format(playbook_name),mode='a') as f4:
             print("请查看日志:"'{}.log'.format(playbook_name))
