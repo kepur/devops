@@ -1,20 +1,20 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: flask-sportdata-office
+  name: k8s-rancher-office
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: flask-sportdata-office
+      app: k8s-rancher-office
   template:
     metadata:
       labels:
-        app: flask-sportdata-office
+        app: k8s-rancher-office
     spec:
       containers:
-      - name: flask-sportdata-office
-        image: wolihi/flask-sportdata-office:v1.0
+      - name: k8s-rancher-office
+        image: rancher/rancher:v2.4.8
         imagePullPolicy: Always
         ports:
         - containerPort: 7789
@@ -29,7 +29,7 @@ spec:
         - name: db_port
           value: "3306"
         - name: db_name
-          value: "flask-sportdata-office"
+          value: "k8s-rancher-office"
         - name: db_password
           valueFrom:
             secretKeyRef:

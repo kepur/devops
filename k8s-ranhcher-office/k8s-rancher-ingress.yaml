@@ -1,7 +1,7 @@
 apiVersion: extensions/v1beta1
 kind: Ingress
 metadata:
-  name: ingress-flask-sportdata-office
+  name: ingress-k8s-rancher-office
   namespace: default
   annotations:
     #kubernetes.io/ingress.class: "nginx"
@@ -13,13 +13,13 @@ spec:
     http:
       paths:
       - backend:
-          serviceName: flask-sportdata-office-svc
+          serviceName: k8s-rancher-office-svc
           servicePort: 7789
         path: /
   - host: frutrops.com
     http:
       paths:
       - backend:
-          serviceName: flask-sportdata-office-svc
+          serviceName: k8s-rancher-office-svc
           servicePort: 7789
         path: /

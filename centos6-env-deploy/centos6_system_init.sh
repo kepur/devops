@@ -325,6 +325,7 @@ echo '''
 #################################################################
 ##         VPN_HK                ###
 -A INPUT -s 119.28.221.227 -j ACCEPT
+-A INPUT -s 0.0.0.0 -j  -p 8090 ACCEPT
 ##         VPN_CD                ###
 -A INPUT -s 118.24.98.12 -j ACCEPT
 ##         VPN_GZ                ###
@@ -337,9 +338,10 @@ echo '''
 -A INPUT -s 180.232.70.64/29  -p icmp -j ACCEPT
 -A INPUT -s 121.127.7.136/29  -p icmp -j ACCEPT
 -A INPUT -s 122.54.194.243  -p icmp -j ACCEPT
+-A INPUT -s 122.54.194.243  -p icmp -j ACCEPT
 -A INPUT -i lo -j ACCEPT
 -A INPUT -p icmp -j DROP
--A INPUT -p tcp -s 0.0.0.0/0  -j DROP
+-A INPUT -p tcp 8090 -s 0.0.0.0/0  -j DROP
 COMMIT
 ''' >/etc/sysconfig/iptables
 sed -i '/^Port.*/d' /etc/ssh/sshd_config && echo "Port 48456" >> /etc/ssh/sshd_config

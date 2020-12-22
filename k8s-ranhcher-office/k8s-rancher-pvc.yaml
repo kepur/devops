@@ -1,0 +1,27 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: java-confluence-run-pvc
+spec:
+  storageClassName: confluence-run-storage
+  accessModes:
+  #需要使用和PV 一致的访问方式
+  - ReadWriteMany
+  #按需分配资源
+  resources:
+    requests:
+      storage: 11Gi
+# ---
+# apiVersion: v1
+# kind: PersistentVolumeClaim
+# metadata:
+#   name: java-confluence-sys-pvc
+# spec:
+#   storageClassName: confluence-sys-storage
+#   accessModes:
+#   #需要使用和PV 一致的访问方式
+#   - ReadWriteOnce
+#   #按需分配资源
+#   resources:
+#     requests:
+#       storage: 5Gi

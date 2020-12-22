@@ -170,7 +170,7 @@ sleep 1s
 firewall-cmd --permanent --zone=public --add-forward-port=port=38789:proto=tcp:toport=3306
 firewall-cmd --permanent --zone=public --add-port=8090-8094/tcp
 firewall-cmd --permanent --zone=public --add-port=48456/tcp
-firewall-cmd --permanent --zone=public --add-port=3020/tcp
+firewall-cmd --permanent --zone=public --add-port=30080/tcp
 firewall-cmd --permanent --zone=public --add-port=80/tcp
 firewall-cmd --permanent --zone=public --add-port=443/tcp
 firewall-cmd --reload

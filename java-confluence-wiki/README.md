@@ -62,6 +62,18 @@ docker push wolihi/java-confluence-wiki:v7.9.0
 docker build -t wolihi/java-confluence-wiki:latest .
 docker push wolihi/java-confluence-wiki:latest
 
+docker pull wolihi/java-confluence-wiki:v7.4.0
+docker单独启动
+docker run -d --name confluence \
+  --restart always \
+  -p 18090:8090 -p 18091:8091 \
+  -e TZ="Asia/Shanghai" \
+  -v /opt/confluence:/var/atlassian/confluence \
+wolihi/java-confluence-wiki:v7.4.0
+
+  -v /opt/atlassian/confluence:/opt/atlassian/confluence \
+
+
 确认一下K8S挂载的nfs
 showmount -e 10.25.96.30
 mount -t nfs 10.25.96.30:/opt/kubernetes/volums /usr/local/kubernetes/volumes
@@ -99,6 +111,18 @@ java -jar atlassian-agent.jar \
    -d -m darkernode@gmail.com -n BAT \
    -p conf -o http://10.1.135.30:8090 \
  -s B9O2-R32P-YULT-D846
+
+java -jar atlassian-agent.jar \
+   -d -m darkernode@gmail.com -n BAT \
+   -p conf -o http://10.25.96.40:8090 \
+ -s BMMN-3ASP-9D7W-2OO9
+
+
+
+ java -jar atlassian-agent.jar \
+   -d -m darkernode@gmail.com -n BAT \
+   -p conf -o 172.17.0.2:8090 \
+ -s B11T-TPM9-R9H0-KGQY
 
 复制密钥:
 AAABow0ODAoPeJyNUl2PmzAQfOdXIPXZHCbhrhcJ6RJAKiqQqnCnvjqwCb6CjdYmbfrrawKn3kcUV
