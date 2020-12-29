@@ -1,6 +1,6 @@
-    安装openresty nginx
-    useradd -s /sbin/nologin www 
-    mkdir -p /usr/local/openssl
+安装openresty nginx
+useradd -s /sbin/nologin www 
+mkdir -p /usr/local/openssl
 openresty1.17_install(){
     mkdir /opt/openresty && cd /opt/openresty
     wget https://openresty.org/download/openresty-1.17.8.2.tar.gz
@@ -25,14 +25,15 @@ openresty1.17_install(){
     ''' >> /lib/systemd/system/nginx.service
     systemctl enable nginx.service
     systemctl start nginx.service
+    timedatectl set-timezone Asia/Shanghai
+    ntpdate -q 1.cn.pool.ntp.org
+    systemctl start ntpd
+    systemctl enable ntpd
+    systemctl enable nginx
 }
 
 时间同步
-timedatectl set-timezone Asia/Shanghai
-ntpdate -q 1.cn.pool.ntp.org
-systemctl start ntpd
-systemctl enable ntpd
-systemctl enable nginx
+
 systemctl enable mysqld.service
 systemctl enable ntpd
 systemctl enable firewalld.service 
