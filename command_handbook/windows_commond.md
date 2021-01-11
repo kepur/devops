@@ -3,10 +3,6 @@ winrm
 #查看winrm配置
 winrm g winrm/config
 
-
-
-
-
 winrm enumerate winrm/config/listener
 winrm quickconfig
 winrm e winrm/config/listener

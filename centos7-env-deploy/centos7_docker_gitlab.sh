@@ -113,3 +113,13 @@ sudo yum install firewalld
 sudo systemctl start firewalld
 sudo firewall-cmd --add-service=http --permanent
 sudo firewall-cmd --reload
+
+
+
+git clone ssh://git@git-scm.bitbaseotc.com:otc/bitbase-api.git
+git clone ssh://git@192.168.10.10:23/test-devops/LinuxArchitect.git
+
+git@git-scm.bitbaseotc.com:otc/bitbase-api.git
+https://git-scm.bitbaseotc.com/otc/bitbase-api.git
+
+
