@@ -1,7 +1,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: django-blogdemo-web
+  name: django-blogdemo-office
 spec:
   replicas: 1
   selector:
