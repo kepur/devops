@@ -119,3 +119,13 @@ check_sys(){
     fi
 }
 
+
+install_docker(){
+    sudo yum install -y yum-utils device-mapper-persistent-data lvm2
+    sudo yum-config-manager     --add-repo     https://download.docker.com/linux/centos/docker-ce.repo
+    sudo yum makecache fast 
+    sudo yum install docker-ce -y
+    yum list docker-ce.x86_64  --showduplicates | sort -r
+    sudo yum install docker-ce-19.03.9-3.el7 -y
+    sudo systemctl start docker
+}
