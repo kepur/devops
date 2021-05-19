@@ -1,5 +1,6 @@
 #!/bin/bash
 redisurl="https://linux-1254084810.cos.ap-chengdu.myqcloud.com/redis-4.0.6.tar.gz"
+redis="https://download.redis.io/releases/redis-6.2.3.tar.gz"
 
 redis4.0.6_install(){
 	echo "正在执行redis安装"

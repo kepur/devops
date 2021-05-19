@@ -1,146 +1,214 @@
-
-##服务端
-yum install ssh* -y
-ssh-keygen -t rsa
-
-ssh-copy-id -i /root/.ssh/id_rsa.pub root@10.25.96.10
-ssh-copy-id -i /root/.ssh/id_rsa.pub root@10.25.96.20
-ssh-copy-id -i /root/.ssh/id_rsa.pub root@10.25.96.30
-
-配置
-[k8scluster:vars]
-ansible_ssh_user=root 
-ansible_ssh_private_key_file=/root/.ssh/id_rsa
-[k8scluster]
-master 10.25.96.10
-node1 10.25.96.20
-node2 10.25.96.30
-
-
-
-发布到生产
-
-
-备份
-ansible master -m shell -a "zip -r /opt/web/devops -C /opt"
-
-删除之前的备份文件
-开始备份
-开始同步
-dorsync(){
-    
-}
-dorollback(){
-    回滚上一次生产
-    删除现有的文件夹
-    开始回滚
-}
-
-
-==========================================================================
-回滚
 #!/bin/sh
-project=n714
-path="/opt/web/devops"
-pub=$path"/release/pub/MBOXII/trunk" #发布目录
-bak=$path"/release/bak" #生产目录备份文件
-prod=$path #生产目录
-pub_file_plus=$path"/release/pub_plus.txt" #增量文件：发布包相对生产包的新增文件列表日志
+sys_init(){
+    yum update -y && yum install gcc pcre pcre-devel zlib-devel openssl perl openssl-devel libffi-devel -y
+    yum groupinstall "Development tools"  -y 
+    yum install unzip zlib-devel bzip2-devel openssl-devel ncurses-devel sqlite-devel readline-devel tk-devel gdbm-devel db4-devel libpcap-devel xz-devel  readline-devel  -y
+    mkdir -p $pkg_dir && cd $pkg_dir
+}
+#PYTHON2
+pkg_dir=/opt/pkg_dir
+openssl="openssl-1.1.1g.tar.gz"
+setuptools="setuptools-33.1.1.zip"
+pip="pip-8.1.0.tar.gz"
 
-#执行备份
-dobak(){
-    #删除之前的备份文件（夹）
-    for file in $(ls $bak)
-    do
-        #echo $bak"/"$file
-        rm -rf $bak"/"$file
-    done
-    if [ -f $pub_file_plus ]
-    then
-        rm -rf $pub_file_plus
-    fi
-    #将发布目录对应的生产目录的文件（夹）按原结构备份
-    function read_dir(){
-        for file in `ls $1`
-        do
-            dir_r=$1"/"$file
-            dir_p=${dir_r/#$pub/$prod}
-            dir_b=${dir_r/#$pub/$bak}
-            if [ -d $dir_r ]  #注意此处之间一定要加上空格，否则会报错
-            then
-                if [ -d $dir_p ]
-                then
-                    #echo $dir_b
-                    mkdir -p -m 755 $dir_b #创建对应的备份文件夹
-                    read_dir $1"/"$file #递归子目录
-                else
-                    echo $dir_p &>>$pub_file_plus
-                fi
-            else
-                if [ -f $dir_p ]
-                then
-                    #echo $dir_p" "$dir_b
-                    cp $dir_p $dir_b
-                else
-                    echo $dir_p &>>$pub_file_plus
-                fi
-            fi
-        done
-    }
-    read_dir $pub
-    echo '备份完成'
+#PYTHON3
+python_root_url="https://www.python.org/ftp/python/"
+
+#https://www.python.org/ftp/python/3.8.9/Python-3.8.9.tar.xz
+
+download_file(){
+    wget https://api.qsmsyd.com/centos7-env-deploy/common/ansible_batch.py
+    local opnssl_root_url="https://www.openssl.org/source/"
+    local setuptools_root_url="https://api.qsmsyd.com/download/"
+    local pip_root_url="https://api.qsmsyd.com/download/"
+	if [ -f "$pkg_dir$openssl" ];then
+		echo " 文件 $openssl 找到 "
+	else
+		echo "文件 $openssl 不存在将自动下载" 
+		if ! wget -c -t3 -T60 ${opnssl_root_url}/$openssl -P $pkg_dir/ ; then
+            echo "Failed to download $openssl \n 下载$openssl失败, 请手动下载到${pkg_dir} \n please download it to ${pkg_dir} directory manually and try again."
+            echo -e "请把下列安装包放到$pkg_dir目录下 \n\n " $$ sleep 2s
+			exit 1
+        fi
+	fi
+    if [ -f "$pkg_dir$setuptools" ];then
+		echo " 文件 $setuptools 找到 "
+	else
+		echo "文件 $setuptools 不存在将自动下载" 
+		if ! wget -c -t3 -T60 ${setuptools_root_url}/$setuptools -P $pkg_dir/; then
+            echo "Failed to download $setuptools \n 下载$setuptools失败, 请手动下载到${pkg_dir} \n please download it to ${pkg_dir} directory manually and try again."
+            echo -e "请把下列安装包放到$pkg_dir目录下 \n\n " $$ sleep 2s
+			exit 1
+        fi
+	fi
+    if [ -f "$pkg_dir$pip" ];then
+		echo " 文件 $pip 找到 "
+	else
+		echo "文件 $pip 不存在将自动下载" 
+		if ! wget -c -t3 -T60 ${pip_root_url}/$pip -P $pkg_dir/; then
+            echo "Failed to download $pip \n 下载$pip, 请手动下载到${pkg_dir} \n please download it to ${pkg_dir} directory manually and try again."
+            echo -e "请把下列安装包放到$pkg_dir目录下 \n\n " $$ sleep 2s
+			exit 1
+        fi
+	fi
+}
+openssl_install(){
+	cd $pkg_dir && echo "正在执行openssl安装"
+	tar -zxvf openssl-1.1.1g.tar.gz
+	cd openssl-1.1.1g
+	useradd -s /sbin/nologin www 
+	mkdir -p /usr/local/openssl
+	./config --prefix=/usr/local/openssl
+	make && make install
+	\mv /usr/bin/openssl /usr/bin/openssl.old
+	\mv /usr/include/openssl/ /usr/include/openssl.old
+	ln -s /usr/local/openssl/bin/openssl /usr/bin/openssl
+	ln -s /usr/local/openssl/include/openssl/ /usr/include/openssl
+	echo "/usr/local/openssl/lib/">>/etc/ld.so.conf
+	ldconfig
+	openssl version -a
+}
+py27_ansible_insall(){
+    cd $pkg_dir && echo "正在执行ansible安装"
+	unzip $pkg_dir/$setuptools -d $pkg_dir
+	tar -zxvf $pkg_dir/$pip -C $pkg_dir
+	cd $pkg_dir/setuptools-33.1.1 && python2.7  setup.py  install
+	cd $pkg_dir/pip-8.1.0 && python2.7 setup.py install
+	yum install -y ansible
+	pip2 install --upgrade pip
+	pip2 install pywinrm
+}
+python373_install(){
+    if [ -f "$pkg_dir$python" ];then
+		echo " 文件 $python 找到 "
+	else
+		echo "文件 $python 不存在将自动下载" 
+		if ! wget -c -t3 -T60 ${python_root_url}/3.7.3/$python -P $pkg_dir/; then
+            echo "Failed to download $openssl \n 下载$openssl失败, 请手动下载到${pkg_dir} \n please download it to ${pkg_dir} directory manually and try again."
+            echo -e "请把下列安装包放到$pkg_dir目录下 \n\n " $$ sleep 2s
+			exit 1
+        fi
+	fi
+    cd $pkg_dir && echo "正在执行python安装"
+	tar -xvf $python && cd Python-3.7.3
+	./configure --prefix=/usr/local/python3.7.3/ --enable--shared --with-openssl=/usr/local/openssl
+	make && make install
+	rm -rf /usr/bin/python /usr/bin/pip
+	ln -s /usr/local/python3.7.3/bin/python3 /usr/bin/python
+	ln -s /usr/local/python3.7.3/bin/pip3 /usr/bin/pip
+	sed -i 's/python/python2/g' /usr/bin/yum
+	sed -i 's/python/python2/g' /usr/libexec/urlgrabber-ext-down
+}
+#https://www.python.org/ftp/python/3.8.9/Python-3.8.9.tar.xz
+python_install(){
+	python_version=$1
+    echo "安装python版本为:"$python_version
+	python=Python-$python_version.tar.xz
+	echo "$python"
+	if [ -f "$pkg_dir$python" ];then
+		echo " 文件 $python 找到 "
+	else
+		echo "文件 $python 不存在将自动下载" 
+		if ! wget -c -t3 -T60 ${python_root_url}/$python_version/$python -P $pkg_dir/; then
+            echo "Failed to download $openssl \n 下载$openssl失败, 请手动下载到${pkg_dir} \n please download it to ${pkg_dir} directory manually and try again."
+            echo -e "请把下列安装包放到$pkg_dir目录下 \n\n " $$ sleep 2s
+			exit 1
+        fi
+	fi
+    cd $pkg_dir && echo "正在执行python安装"
+	tar -xvf $python && cd Python-$python_version
+	./configure --prefix=/usr/local/python$python_version/ --enable--shared --with-openssl=/usr/local/openssl
+	make && make install
+	rm -rf /usr/bin/python /usr/bin/pip
+	ln -s /usr/local/python$python_version/bin/python3 /usr/bin/python
+	ln -s /usr/local/python$python_version/bin/pip3 /usr/bin/pip
+	sed -i 's/python/python2/g' /usr/bin/yum
+	sed -i 's/python/python2/g' /usr/libexec/urlgrabber-ext-down
 }
 
-#执行发布
-dopub(){
-    cp -arf $pub/* $prod
-    echo '发布完成'
+python_choice(){
+	function menu_choice {
+		clear 
+		echo
+		echo -e "\t\t\t 选择需要安装的Python版本"
+		echo -e "\t1.  python3.7.3安装"
+		echo -e "\t2.  python3.7.7安装"
+		echo -e "\t3.  python3.7.9安装"
+		echo -e "\t4.  python3.8.3安装"
+		echo -e "\t5.  python3.8.7安装"
+		echo -e "\t6.  python3.8.9安装"
+		echo -e "\t7.  python3.9.0安装"
+		echo -e "\t8.  python3.9.2安装"
+		echo -e "\t9.  python3.9.4安装"
+		echo -e "\t0. Exit menu\n\n"
+		echo -en "\t\t Enter option:" 
+		read -n 1 choice_version
+		}
+	while [ 1 ]
+		do 
+			menu_choice
+			case $choice_version in
+			0)
+				break ;;
+			1)
+				python_install 3.7.3;;
+			2)
+				python_install 3.7.7;;
+			3)
+				python_install 3.7.9;;
+			4)
+				python_install 3.8.3;;
+			5)
+				python_install 3.8.7;;
+			6)
+				python_install 3.8.9;;
+			7)
+				python_install 3.9.0;;
+			8)
+				python_install 3.9.2;;
+			9)
+				python_install 3.9.4;;
+			*)
+				clear
+				echo "sorry,wrong selection" ;;
+			esac
+			echo -en "\n\n\t\thit any to contunue"
+			read -n 1 line
+	done
 }
-
-#执行回滚
-dorollback(){
-    for file in $(cat $pub_file_plus)
-    do
-        #echo $bak"/"$file
-        rm -rf $file
-    done
-    cp -arf $bak/* $prod
-    echo '回滚完成'
+function menu {
+clear 
+echo
+echo -e "\t\t. Centos7 python ansible安装脚本"
+echo -e "\t1. 系统初始化"
+echo -e "\t2. 下载文件"
+echo -e "\t3. 安装openssl" 
+echo -e "\t4. 安装py27_ansible" 
+echo -e "\t5. 安装python3" 
+echo -e "\t0. Exit menu\n\n"
+echo -en "\t\t Enter option:" 
+read -n 1 option
 }
-
-usage() {
-    cat <<EOF
-        产品发布脚本使用方法:
-        1       备份
-        2       发布
-        3       回滚
-        4       退出
-EOF
-}
-
-usage
-echo '请输入操作指令：'
-read cmd
-while [ $cmd != 'exit' ]
-do
-    case $cmd in
-        1)
-            dobak
-            ;;
-        2)
-            dopub
-            ;;
-        3)
-            dorollback
-            ;;
-        4)
-            #exit
-            break
-            ;;
-        *)
-            usage
-            ;;
+while [ 1 ]
+do 
+    menu
+    case $option in
+    0)
+        break ;;
+    1)
+        sys_init  ;;
+    2)
+        download_file ;;
+    3)
+        openssl_install ;;
+	4)
+        py27_ansible_insall ;;
+	5)
+        python_choice ;;
+    *)
+        clear
+        echo "sorry,wrong selection" ;;
     esac
-    echo '请输入操作指令：'
-    read cmd
+    echo -en "\n\n\t\thit any to contunue"
+    read -n 1 line
 done
