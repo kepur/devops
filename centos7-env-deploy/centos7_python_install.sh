@@ -56,7 +56,7 @@ openssl_install(){
 python_root_url="https://www.python.org/ftp/python/"
 pkg_dir=/opt/pkg_dir
 python_install(){
-        python_version=$1
+    python_version=$1
 	echo $python_version
 	python=Python-$python_version.tar.xz
 	echo "$python"

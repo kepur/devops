@@ -1,5 +1,5 @@
 #!/bin/bash
-redis4.0.6_install(){
+redis406_install(){
 	echo "正在执行redis安装"
 	sleep 1s
 	tar -zxvf redis-4.0.6.tar.gz
@@ -32,8 +32,13 @@ redis4.0.6_install(){
 #https://download.redis.io/releases/redis-6.2.3.tar.gz?_ga=2.171752800.1114973999.1621433299-296576591.1621433299
 redis_root_url="https://download.redis.io/releases/"
 pkg_dir=/opt/pkg_dir
+if [ ! -d "/opt/pkg_dir" ];then
+  mkdir -p /opt/pkg_dir
+  else
+  echo "文件夹已经存在"
+fi
 redis_install(){
-        redis_version=$1
+    redis_version=$1
 	echo $redis_version
 	Redis=redis-$redis_version.tar.gz
 	echo "$python"
@@ -41,7 +46,7 @@ redis_install(){
 		echo " 文件 $Redis 找到 "
 	else
 		echo "文件 $Redis 不存在将自动下载" 
-		if ! wget -c -t3 -T60 ${redis_root_url}/$redis_version/$Redis -P $pkg_dir/; then
+		if ! wget -c -t3 -T60 ${redis_root_url}/$Redis -P $pkg_dir/; then
             echo "Failed to download $Redis \n 下载$Redis失败, 请手动下载到${pkg_dir} \n please download it to ${pkg_dir} directory manually and try again."
             echo -e "请把下列安装包放到$pkg_dir目录下 \n\n " $$ sleep 2s
 			exit 1
