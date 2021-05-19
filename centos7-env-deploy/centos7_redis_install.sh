@@ -58,6 +58,7 @@ redis_install(){
 	make MALLOC=libc
 	cd \src
 	make install 
+	mkdir -p /etc/redis/
 	cp $pkg_dir/redis-$redis_version/redis.conf /etc/redis/6379.conf
 	cp $pkg_dir/redis-$redis_version/utils/redis_init_script /etc/init.d/redisd
 	sed -i '2i\
@@ -69,13 +70,14 @@ redis_install(){
 	After=network.target
 
 	[Service]
-	Type=forking
+	#Type=forking
 	ExecStart=/usr/local/bin/redis-server /etc/redis/6379.conf
 	PrivateTmp=true
 
 	[Install]
 	WantedBy=multi-user.target
 	''' >> /lib/systemd/system/redis.service
+	system daemon-reload
 	systemctl enable redis.service
 	systemctl restart redis.service
 
