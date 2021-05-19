@@ -17,20 +17,6 @@ py27_ansible_insall(){
 	pip2 install pywinrm --ignore-installed requests 
 }
 
-py39_ansible_insall(){
-	wget https://api.qsmsyd.com/download/pip-8.1.0.tar.gz
-	wget https://api.qsmsyd.com/download/setuptools-33.1.1.zip
-	unzip setuptools-33.1.1.zip
-	tar zxvf pip-8.1.0.tar.gz
-	cd setuptools-33.1.1
-	python2.7  setup.py  install
-	cd pip-8.1.0
-	python2.7 setup.py install
-	pip install --upgrade pip
-	pip2 install pywinrm
-}
-
-
 
 download_file(){
 	cd /opt/
@@ -67,7 +53,7 @@ openssl_install(){
 	openssl version -a
 }
 python3.9.1_install(){
-	https://www.python.org/ftp/python/3.9.1/Python-3.9.1.tar.xz
+	wget https://www.python.org/ftp/python/3.9.1/Python-3.9.1.tar.xz
 	tar -xvf Python-3.9.1.tar.xz
 	cd Python-3.9.1
 	./configure --prefix=/usr/local/python3.9.1/ --enable--shared --with-openssl=/usr/local/openssl
@@ -78,6 +64,19 @@ python3.9.1_install(){
 	sed -i 's/python/python2/g' /usr/bin/yum
 	sed -i 's/python/python2/g' /usr/libexec/urlgrabber-ext-down
 }
+python3.8.9_insall(){
+	wget https://www.python.org/ftp/python/3.8.9/Python-3.8.9.tar.xz
+	tar -xvf Python-3.8.9.tar.xz
+	cd Python-3.8.9
+	./configure --prefix=/usr/local/python3.9.1/ --enable--shared --with-openssl=/usr/local/openssl
+	make && make install
+	rm -rf /usr/bin/python /usr/bin/pip
+	ln -s /usr/local/python3.9.1/bin/python3 /usr/bin/python
+	ln -s /usr/local/python3.9.1/bin/pip3 /usr/bin/pip
+	sed -i 's/python/python2/g' /usr/bin/yum
+	sed -i 's/python/python2/g' /usr/libexec/urlgrabber-ext-down
+}
+
 python3.7.3_install(){
 	wget https://www.python.org/ftp/python/3.7.3/Python-3.7.3.tar.xz
 	tar -xvf Python-3.7.3.tar.xz
@@ -90,6 +89,7 @@ python3.7.3_install(){
 	sed -i 's/python/python2/g' /usr/bin/yum
 	sed -i 's/python/python2/g' /usr/libexec/urlgrabber-ext-down
 }
+
 
 
 

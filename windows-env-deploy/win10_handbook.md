@@ -24,3 +24,12 @@ ansible 使用
     product_id: 'Apache Tomcat 8.0 Tomcat8'
     arguments: '/S -ServiceName="Tomcat8"'
     state: absent
+
+
+
+   ansible windows -m win_shell -a 'dir.bat chdir=C:\\at executable=cmd
+
+
+ansible windows -m win_shell -a 'tscon.bat chdir=C:\\ executable=cmd
+
+
