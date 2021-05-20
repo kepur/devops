@@ -86,7 +86,7 @@ redis_install(){
 function menu_choice {
 	clear 
 	echo
-	echo -e "\t\t. 选择python安装的版本"
+	echo -e "\t\t. 选择Redis安装的版本"
 	echo -e "\t1.  redis 4.0.6安装"
 	echo -e "\t2.  redis 6.2.3安装"
 	echo -e "\t0. Exit menu\n\n"
