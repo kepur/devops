@@ -11,9 +11,9 @@ mysql574_install(){
 	rpm -ivh mysql57-community-release-el7-8.noarch.rpm
 	yum -y install mysql-server
 	service mysqld restart
-	systemctl enable mysqld.service
+	systemctl enable mysqld.services
 	oldpass=`grep pass /var/log/mysqld.log | awk '{print $NF}'`
-	/usr/local/mysql/bin/mysql --connect-expired-password -uroot -p${oldpass} -e "ALTER USER 'root'@'localhost' IDENTIFIED BY '"${NewPass}"';"
-	/usr/local/mysql/bin/mysql --connect-expired-password -uroot -p${oldpass} -e " flush privileges;"
+	/usr/bin/mysql --connect-expired-password -uroot -p${oldpass} -e "ALTER USER 'root'@'localhost' IDENTIFIED BY '"${NewPass}"';"
+	/usr/bin/mysql --connect-expired-password -uroot -p${oldpass} -e " flush privileges;"
 }
 mysql574_install

@@ -42,6 +42,8 @@ sed -i '/saraluce.conf/a\    include vhost/yazddakal.conf;' /opt/nginx/conf/ngin
 kubectl get svc -o wide
 #更改10.108.61.2和端口7792
 vim /opt/nginx/conf/vhost/yazddaka.conf
+vim /opt/nginx/conf/vhost/yazddaka.conf
+vim /opt/nginx/conf/vhost/yazddaka.conf
 systemctl restart nginx
 
 
@@ -66,3 +68,4 @@ fafa12.com
 博客站
 
 
+robelyn roubio\

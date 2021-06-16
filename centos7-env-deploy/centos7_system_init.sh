@@ -1,4 +1,20 @@
 #!/bin/bash
+#Live Aquarium Fish
+#初始化
+#ntp时间校验
+#common
+#mysql 
+#mysql 备份 mysql 日志切割 
+#php case 选择 53 56 72
+#nginx
+#nginx+lua
+#nginx+日志切割
+#redis case
+#java 安装 
+
+
+#!/bin/bash
+echo " 初始化安装请确保网络通畅DNS解析正常......" && sleep 2s
 export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
 options=("Option 1" "Option 2" "Option 3" "Quit")
 select opt in "${options[@]}"
