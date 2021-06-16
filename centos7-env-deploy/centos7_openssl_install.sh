@@ -13,7 +13,7 @@ do
     case $opt in
         "openssl-3.0.0-alpha17")
             echo "you chose install openssl-3.0.0-alpha17"
-            openssl_install 1.1.1k 3.0.0-alpha17
+            openssl_install 3.0.0-alpha17
             ;;
         "openssl-1.1.1k")
             echo "you chose install openssl-1.1.1k"
