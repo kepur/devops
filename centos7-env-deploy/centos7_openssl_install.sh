@@ -57,5 +57,3 @@ do
     esac
 done
 
-13$
-12$
