@@ -1,5 +1,4 @@
 #!/bin/bash
-
 #https://www.openssl.org/source/openssl-1.1.1k.tar.gz
 #https://www.openssl.org/source/openssl-fips-2.0.16.tar.gz
 #openssl-3.0.0-alpha17.tar.gz
@@ -7,28 +6,6 @@ pkg_dir=/opt/pkg_dir/
 openssl_root_url="https://www.openssl.org/source/"
 echo " 初始化安装请确保网络通畅DNS解析正常......" && sleep 2s
 export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
-options=("openssl-3.0.0-alpha17" "openssl-1.1.1k" "openssl-fips-2.0.16" "Quit")
-select opt in "${options[@]}"
-do
-    case $opt in
-        "openssl-3.0.0-alpha17")
-            echo "you chose install openssl-3.0.0-alpha17"
-            openssl_install 3.0.0-alpha17
-            ;;
-        "openssl-1.1.1k")
-            echo "you chose install openssl-1.1.1k"
-			openssl_install 1.1.1k
-            ;;
-        "openssl-fips-2.0.16")
-            echo "you chose install openssl-fips-2.0.16"
-			openssl_install fips-2.0.16
-            ;;
-        "Quit")
-            break
-            ;;
-        *) echo "invalid option ";;
-    esac
-done
 openssl_install(){
     openssl_version=$1
     echo $openssl_version
@@ -57,3 +34,25 @@ openssl_install(){
 	ldconfig
 	openssl version -a
 }
+options=("openssl-3.0.0-alpha17" "openssl-1.1.1k" "openssl-fips-2.0.16" "Quit")
+select opt in "${options[@]}"
+do
+    case $opt in
+        "openssl-3.0.0-alpha17")
+            echo "you chose install openssl-3.0.0-alpha17" 
+            openssl_install 3.0.0-alpha17
+            ;;
+        "openssl-1.1.1k")
+            echo "you chose install openssl-1.1.1k"
+			openssl_install 1.1.1k
+            ;;
+        "openssl-fips-2.0.16")
+            echo "you chose install openssl-fips-2.0.16"
+			openssl_install fips-2.0.16
+            ;;
+        "Quit")
+            break
+            ;;
+        *) echo "invalid option ";;
+    esac
+done
