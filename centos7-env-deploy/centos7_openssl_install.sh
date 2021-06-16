@@ -27,7 +27,7 @@ openssl_install(){
 	./config --prefix=/usr/local/openssl-$openssl_version
 	make && make install
 	\mv /usr/bin/openssl /usr/bin/openssl.old
-	\mv /usr/include/openssl/ /usr/include/openssl.old
+	\mv /usr/include/openssl /usr/include/openssl.old
 	ln -s /usr/local/openssl-$openssl_version/bin/openssl /usr/bin/openssl
 	ln -s /usr/local/openssl-$openssl_version/include/openssl/ /usr/include/openssl
 	echo "/usr/local/openssl-$openssl_version/lib/">>/etc/ld.so.conf
@@ -56,3 +56,6 @@ do
         *) echo "invalid option ";;
     esac
 done
+
+13$
+12$
