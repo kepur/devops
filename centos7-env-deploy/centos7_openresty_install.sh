@@ -1,36 +1,4 @@
-openresty117_install(){
-    #安装openresty nginx
-    useradd -s /sbin/nologin www 
-    mkdir -p /usr/local/openssl
-    mkdir /opt/openresty && cd /opt/openresty
-    wget https://openresty.org/download/openresty-1.17.8.2.tar.gz
-    tar -zxvf openresty-1.17.8.2.tar.gz
-    cd /opt/openresty/openresty-1.17.8.2
-    sed -i 's/\.openssl\///g' /opt/openresty/openresty-1.17.8.2/bundle/nginx-1.17.8/auto/lib/openssl/conf
-    sed -i 's/openssl\/include\/openssl\/ssl.h/include\/openssl\/ssl.h/g' /opt/openresty/openresty-1.17.8.2/bundle/nginx-1.17.8/auto/lib/openssl/conf
-    ./configure --user=www --group=www  --with-http_stub_status_module --with-http_ssl_module --with-http_gzip_static_module --with-openssl=/usr/local/openssl --prefix=/opt
-    gmake && gmake install
-    echo '''
-    [Unit]
-    Description=nginx
-    After=network.target
-    [Service]
-    Type=forking
-    ExecStart=/opt/nginx/sbin/nginx
-    ExecReload=/opt/nginx/sbin/nginx reload
-    ExecStop=/opt/nginx/sbin/nginx quit
-    PrivateTmp=true
-    [Install]
-    WantedBy=multi-user.target
-    ''' >> /lib/systemd/system/nginx.service
-    systemctl enable nginx.service
-    systemctl start nginx.service
-    timedatectl set-timezone Asia/Shanghai
-    ntpdate -q 1.cn.pool.ntp.org
-    systemctl start ntpd
-    systemctl enable ntpd
-    systemctl enable nginx
-}
+
 # https://openresty.org/download/openresty-1.19.3.2.tar.gz
 # https://openresty.org/download/openresty-1.19.3.1.tar.gz
 # https://openresty.org/download/openresty-1.17.8.2.tar.gz
@@ -106,8 +74,9 @@ openresty_install(){
     systemctl enable nginx
 }
 overwrite_nginx_configfile(){
-local cores=$( awk -F: '/model name/ {core++} END {print core}' /proc/cpuinfo )
-local openfilelimits=$( ulimit -a|grep "open files" )
+cores=$( awk -F: '/model name/ {core++} END {print core}' /proc/cpuinfo )
+worker_processes=`expr $cores \* 2` 
+openfilelimits=$( ulimit -a|grep "open files" )
 mv $nginx_install_path/nginx/conf/nginx.conf $nginx_install_path/nginx/conf/nginx.confbak
 case "$cores" in
 2)
@@ -124,7 +93,7 @@ case "$cores" in
 ;;
 echo '''
 user  www;
-worker_processes  '${cores}';
+worker_processes  '${worker_processes}';
 worker_cpu_affinity '${cpu_affinity}';
 error_log  logs/error.log;
 #pid        logs/nginx.pid;
@@ -214,5 +183,171 @@ http {
     }
 }
 ''' >> $nginx_install_path/nginx/conf/nginx.conf
+echo '''
+server {
+    listen       443 ssl;
+    server_name ezzysleep.com www.ezzysleep.com;
+    ssl_certificate  /opt/nginx/conf/ssl/ezzysleep.crt;
+    ssl_certificate_key /opt/nginx/conf/ssl/ezzysleep.key;
+    ssl_stapling on;
+    ssl_stapling_verify on;
+    ssl_session_timeout 5m;
+    ssl_protocols TLSv1 TLSv1.1 TLSv1.2;
+    ssl_prefer_server_ciphers on;
+    include /opt/nginx/conf/vhost/common.server.module;
+    access_log /opt/nginx/logs/ezzysleep.access.log main;
+    access_log /opt/nginx/logs/ezzysleep.access_json.log main_json;
+    error_log /opt/nginx/logs/ezzysleep.error.log;
+    lua_need_request_body on;
+    set $allow false;
+    set $resp_body "";
+    body_filter_by_lua '
+     local resp_body = string.sub(ngx.arg[1],1,1000)
+     ngx.ctx.buffered=(ngx.ctx.buffered or "")..resp_body
+     if ngx.arg[2]then
+        ngx.var.resp_body = ngx.ctx.buffered
+     end
+     ';
+    location / {
+        #proxy_set_header X-Forwarded-Proto  $scheme;
+        #proxy_set_header   Host $http_host:$server_port;
+        proxy_set_header X-Real-IP $http_x_forwarded_for;
+        proxy_read_timeout 300;
+        proxy_pass http://ezzysleep;
+        recursive_error_pages on;
+    }
+    location ~ .*\.(php|cgi|jsp|asp|aspx|apk)$ {
+        return 301 http://www.baidu.com/s?wd=睡前撸一撸网;
+    }
+    location /hello{
+        default_type 'text.plain';
+        content_by_lua 'ngx.say("hello,lua")';
+    }
 }
+''' >$nginx_install_path/nginx/conf/vhost/example.conf
+}
+echo '''
+########################拦截GET、POST 以及 HEAD 之外的请求############
+if ($request_method !~ ^(GET|HEAD|POST)$ ) {
+	return    444;
+}
+########################拦截GET、POST 以及 HEAD 之外的请求############
+
+#location ~ .*\.(php|cgi|jsp|asp|aspx)$ {
+location ~ .*\.(jsp|asp|aspx)$ {
+    return 301 http://www.baidu.com/s?wd=mmp;
+}
+######################## Block SQL injections 防止SQL注入#############
+set $block_sql_injections 0;
+if ($query_string ~ "union.*select.*\(") {
+set $block_sql_injections 1;
+}
+if ($query_string ~ "union.*all.*select.*") {
+set $block_sql_injections 1;
+}
+if ($query_string ~ "concat.*\(") {
+set $block_sql_injections 1;
+}
+if ($block_sql_injections = 1) {
+return 403;
+}
+
+########################lock file injections防止恶意请求############
+
+set $block_file_injections 0;
+if ($query_string ~ "[a-zA-Z0-9_]=http://") {
+set $block_file_injections 1;
+}
+if ($query_string ~ "[a-zA-Z0-9_]=(\.\.//?)+") {
+set $block_file_injections 1;
+}
+if ($query_string ~ "[a-zA-Z0-9_]=/([a-z0-9_.]//?)+") {
+set $block_file_injections 1;
+}
+if ($block_file_injections = 1) {
+return 403;
+}
+
+########################Block common exploits防止XSS注入############
+set $block_common_exploits 0;
+if ($query_string ~ "(<|%3C).*script.*(>|%3E)") {
+set $block_common_exploits 1;
+}
+if ($query_string ~ "GLOBALS(=|\[|\%[0-9A-Z]{0,2})") {
+set $block_common_exploits 1;
+}
+if ($query_string ~ "_REQUEST(=|\[|\%[0-9A-Z]{0,2})") {
+set $block_common_exploits 1;
+}
+if ($query_string ~ "proc/self/environ") {
+set $block_common_exploits 1;
+}
+if ($query_string ~ "mosConfig_[a-zA-Z_]{1,21}(=|\%3D)") {
+set $block_common_exploits 1;
+}
+if ($query_string ~ "base64_(en|de)code\(.*\)") {
+set $block_common_exploits 1;
+}
+if ($block_common_exploits = 1) {
+return 403;
+}
+
+########################Block common exploits #############
+set $block_spam 0;
+if ($query_string ~ "\b(ultram|unicauca|valium|viagra|vicodin|xanax|ypxaieo)\b") {
+set $block_spam 1;
+}
+if ($query_string ~ "\b(erections|hoodia|huronriveracres|impotence|levitra|libido)\b") {
+set $block_spam 1;
+}
+if ($query_string ~ "\b(ambien|blue\spill|cialis|cocaine|ejaculation|erectile)\b") {
+set $block_spam 1;
+}
+if ($query_string ~ "\b(lipitor|phentermin|pro[sz]ac|sandyauer|tramadol|troyhamby)\b") {
+set $block_spam 1;
+}
+if ($block_spam = 1) {
+return 403;
+} 
+########################Block user agents  防止用户代理请求 #############
+set $block_user_agents 0;
+# Dont disable wget if you need it to run cron jobs!
+#if ($http_user_agent ~ "Wget") {
+# set $block_user_agents 1;
+#}
+
+# Disable Akeeba Remote Control 2.5 and earlier
+if ($http_user_agent ~ "Indy Library") {
+set $block_user_agents 1;
+}
+
+# Common bandwidth hoggers and hacking tools.
+if ($http_user_agent ~ "libwww-perl") {
+set $block_user_agents 1;
+}
+if ($http_user_agent ~ "GetRight") {
+set $block_user_agents 1;
+}
+if ($http_user_agent ~ "GetWeb!") {
+set $block_user_agents 1;
+}
+if ($http_user_agent ~ "Go!Zilla") {
+set $block_user_agents 1;
+}
+if ($http_user_agent ~ "Download Demon") {
+set $block_user_agents 1;
+}
+if ($http_user_agent ~ "Go-Ahead-Got-It") {
+set $block_user_agents 1;
+}
+if ($http_user_agent ~ "TurnitinBot") {
+set $block_user_agents 1;
+}
+if ($http_user_agent ~ "GrabNet") {
+set $block_user_agents 1;
+}
+if ($block_user_agents = 1) {
+return 403;
+}
+''' >> $nginx_install_path/nginx/conf/vhost/commom.server.module
 openresty_install 1.19.3.1
