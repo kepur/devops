@@ -100,4 +100,48 @@ change_ssh_port(){
 	systemctl restart sshd.service
 }
 
+echo '''
+[Unit]
+Description=nginx
+After=network.target
+
+[Service]
+Type=forking
+ExecStart=/opt/nginx/sbin/nginx
+ExecReload=/opt/nginx/sbin/nginx reload
+ExecStop=/opt/nginx/sbin/nginx quit
+PrivateTmp=true
+[Install]
+WantedBy=multi-user.target
+''' >> /lib/systemd/system/nginx.service
+systemctl enable nginx.service
+systemctl start nginx.service
+systemctl status nginx.service
+echo "更改ssh默认端口..............."
+sleep 1s
+sed -i '/^Port.*/d' /etc/ssh/sshd_config && echo "Port 38245" >> /etc/ssh/sshd_config
+setenforce 0
+systemctl restart sshd.service
+echo "安装ntp服务并校验时间..............."
+timedatectl set-timezone Asia/Shanghai
+ntpdate -q 1.cn.pool.ntp.org
+systemctl start ntpd
+systemctl enable ntpd
+systemctl enable nginx
+systemctl enable mysqld.service
+systemctl enable ntpd
+systemctl enable firewalld.service 
+echo "添加防火墙..............."
+sleep 1s
+firewall-cmd --permanent --zone=public --add-rich-rule="rule family="ipv4"  source address="112.207.22.193/24" port protocol="tcp" port="48456" accept"
+firewall-cmd --permanent --zone=public --add-rich-rule="rule family="ipv4"  source address="112.207.22.193/24" port protocol="tcp" port="3306" accept"
+firewall-cmd --permanent --zone=public --add-forward-port=port=38789:proto=tcp:toport=3306 
+firewall-cmd --permanent --zone=public --add-port=8070-8071/tcp
+firewall-cmd --permanent --zone=public --add-port=8098/tcp
+firewall-cmd --permanent --zone=public --add-port=80/tcp
+firewall-cmd --permanent --zone=public --add-port=38245/tcp
+firewall-cmd --reload
+
+
+
 

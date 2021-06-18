@@ -31,7 +31,6 @@ get_os_info(){
     local swap=$( free -m | awk '/Swap/ {print $2}' )
     local up=$( awk '{a=$1/86400;b=($1%86400)/3600;c=($1%3600)/60;d=$1%60} {printf("%ddays, %d:%d:%d\n",a,b,c,d)}' /proc/uptime )
     local load=$( w | head -1 | awk -F'load average:' '{print $2}' | sed 's/^[ \t]*//;s/[ \t]*$//' )
-    local opsy=$( get_opsy )
     local arch=$( uname -m )
     local lbit=$( getconf LONG_BIT )
     local host=$( hostname )
@@ -54,25 +53,7 @@ get_os_info(){
     echo 
     echo "########################################"
 }
-options=("Option 1" "Option 2" "Option 3" "Quit")
-select opt in "${options[@]}"
-do
-    case $opt in
-        "1.系统初始化安装")
-            echo "系统初始化"
-            ;;
-        "2.内核参数优化")
-            echo "you chose choice 2"
-            ;;
-        "3.安装openssl")
-            echo "you chose choice $REPLY which is $opt"
-            ;;
-        "4.")
-            break
-            ;;
-        *) echo "invalid option $REPLY";;
-    esac
-done
+
 
 check_sys(){
     local checkType=$1
@@ -118,8 +99,6 @@ check_sys(){
         fi
     fi
 }
-
-
 install_docker(){
     sudo yum install -y yum-utils device-mapper-persistent-data lvm2
     sudo yum-config-manager     --add-repo     https://download.docker.com/linux/centos/docker-ce.repo
@@ -129,3 +108,22 @@ install_docker(){
     sudo yum install docker-ce-19.03.9-3.el7 -y
     sudo systemctl start docker
 }
+options=("Option 1" "Option 2" "Option 3" "Quit")
+select opt in "${options[@]}"
+do
+    case $opt in
+        "1.系统初始化安装")
+            echo "系统初始化"
+            ;;
+        "2.内核参数优化")
+            echo "you chose choice 2"
+            ;;
+        "3.安装openssl")
+            echo "you chose choice $REPLY which is $opt"
+            ;;
+        "4.")
+            break
+            ;;
+        *) echo "invalid option $REPLY";;
+    esac
+done
