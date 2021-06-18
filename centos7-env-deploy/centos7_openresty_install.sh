@@ -1,4 +1,4 @@
-openresty1.17_install(){
+openresty117_install(){
     #安装openresty nginx
     useradd -s /sbin/nologin www 
     mkdir -p /usr/local/openssl
@@ -34,6 +34,20 @@ openresty1.17_install(){
 # https://openresty.org/download/openresty-1.19.3.2.tar.gz
 # https://openresty.org/download/openresty-1.19.3.1.tar.gz
 # https://openresty.org/download/openresty-1.17.8.2.tar.gz
+change_yum_source(){
+    wget http://mirrors.aliyun.com/repo/Centos-7.repo
+    mv /etc/yum.repos.d/CentOs-Base.repo /etc/yum.repos.d/CentOs-Base.repo.bak
+    mv /etc/yum.repos.d/Centos-7.repo /etc/yum.repos.d/CentOs-Base.repo
+    yum clean all
+    yum makecache
+
+}
+yum_init(){
+    yum update -y && yum install gcc pcre pcre-devel zlib-devel openssl perl openssl-devel libffi-devel -y
+    yum groupinstall "Development tools"  -y 
+    yum install unzip zlib-devel bzip2-devel openssl-devel ncurses-devel sqlite-devel readline-devel tk-devel gdbm-devel db4-devel libpcap-devel xz-devel  readline-devel  -y
+    wget http://mirror.centos.org/centos/7/os/x86_64/Packages/libffi-devel-3.0.13-18.el7.x86_64.rpm
+}
 pkg_dir=/opt/pkg_dir
 openresty_root_url="https://openresty.org/download/"
 openresty_install(){
@@ -58,7 +72,7 @@ openresty_install(){
     then
         echo "支持的版本"
         sed -i 's/\.openssl\///g' $pkg_dir/openresty-$openresty_version/bundle/nginx-1.19.3/auto/lib/openssl/conf
-        sed -i 's/openssl\/include\/openssl\/ssl.h/include\/openssl\/ssl.h/g' /opt/openresty/openresty-$openresty_version/bundle/nginx-1.17.8/auto/lib/openssl/conf
+        sed -i 's/openssl\/include\/openssl\/ssl.h/include\/openssl\/ssl.h/g' $pkg_dir/openresty-$openresty_version/bundle/nginx-1.19.3/auto/lib/openssl/conf
     else
         echo "非1.19版本" && sleep 2s
     fi
@@ -66,11 +80,11 @@ openresty_install(){
     then
         echo "支持的版本"
         sed -i 's/\.openssl\///g'  $pkg_dir/openresty-$openresty_version/bundle/nginx-1.17.8/auto/lib/openssl/conf
-        sed -i 's/openssl\/include\/openssl\/ssl.h/include\/openssl\/ssl.h/g' /opt/openresty/openresty-$openresty_version/bundle/nginx-1.17.8/auto/lib/openssl/conf
+        sed -i 's/openssl\/include\/openssl\/ssl.h/include\/openssl\/ssl.h/g' $pkg_dir/openresty-$openresty_version/bundle/nginx-1.17.8/auto/lib/openssl/conf
     else
         echo "非1.17版本" && sleep 2s
     fi
-    ./configure --user=www --group=www  --with-http_stub_status_module --with-http_ssl_module --with-http_gzip_static_module --with-openssl=/usr/local/openssl --prefix=/opt
+    ./configure --user=www --group=www  --with-http_stub_status_module --with-http_ssl_module --with-http_gzip_static_module --with-openssl=/usr/local/openssl --prefix=/opt/nginx
     cd 
     gmake && gmake install
     echo '''
