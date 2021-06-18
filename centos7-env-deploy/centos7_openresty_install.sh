@@ -40,7 +40,6 @@ change_yum_source(){
     mv /etc/yum.repos.d/Centos-7.repo /etc/yum.repos.d/CentOs-Base.repo
     yum clean all
     yum makecache
-
 }
 yum_init(){
     yum update -y && yum install gcc pcre pcre-devel zlib-devel openssl perl openssl-devel libffi-devel -y
@@ -50,6 +49,7 @@ yum_init(){
 }
 pkg_dir=/opt/pkg_dir
 openresty_root_url="https://openresty.org/download/"
+nginx_install_path=/opt
 openresty_install(){
     openresty_version=$1
     echo $openresty_version
@@ -84,7 +84,7 @@ openresty_install(){
     else
         echo "非1.17版本" && sleep 2s
     fi
-    ./configure --user=www --group=www  --with-http_stub_status_module --with-http_ssl_module --with-http_gzip_static_module --with-openssl=/usr/local/openssl --prefix=/opt/nginx
+    ./configure --user=www --group=www  --with-luajit --without-lua_resty_dns --without-lua_resty_websocket --without-http_redis2_module --with-http_postgres_module --with-http_stub_status_module --with-http_ssl_module --with-http_gzip_static_module --with-openssl=/usr/local/openssl --prefix=$nginx_install_path
     cd 
     gmake && gmake install
     echo '''
@@ -93,9 +93,9 @@ openresty_install(){
     After=network.target
     [Service]
     Type=forking
-    ExecStart=/opt/nginx/sbin/nginx
-    ExecReload=/opt/nginx/sbin/nginx reload
-    ExecStop=/opt/nginx/sbin/nginx quit
+    ExecStart='${nginx_install_path}'/nginx/sbin/nginx
+    ExecReload='${nginx_install_path}'/nginx/sbin/nginx reload
+    ExecStop='${nginx_install_path}'/nginx/sbin/nginx quit
     PrivateTmp=true
     [Install]
     WantedBy=multi-user.target
@@ -104,5 +104,101 @@ openresty_install(){
     systemctl start nginx.service
     systemctl enable ntpd
     systemctl enable nginx
+}
+overwrite_nginx_configfile(){
+local cores=$( awk -F: '/model name/ {core++} END {print core}' /proc/cpuinfo )
+local openfilelimits=$( ulimit -a|grep "open files" )
+mv $nginx_install_path/nginx/conf/nginx.conf $nginx_install_path/nginx/conf/nginx.confbak
+echo '''
+user  www;
+worker_processes  '${cores}';
+error_log  logs/error.log;
+#pid        logs/nginx.pid;
+events {
+    worker_connections  '${openfilelimits}';
+}
+http {
+    include       mime.types;
+    default_type  application/octet-stream;
+
+    map $HTTP_CF_CONNECTING_IP  $clientRealIp {
+    ""    $remote_addr;
+    ~^(?P<firstAddr>[0-9.]+),?.*$    $firstAddr;
+    }
+    proxy_set_header X-Real-IP $remote_addr;
+    #proxy_set_header X-Real-IP $clientRealIp;
+    log_format  main  '$http_x_forwarded_for- $remote_user [$time_local] "$request" '
+                      '$status $body_bytes_sent "$http_referer" '
+                      '"$http_user_agent" "$http_x_forwarded_for"';
+    log_format  main_json '{"time_local":[$time_local],
+    "ClientRealIp":"$clientRealIp",
+    "request_domain":"$http_host",
+    "request":"$request",
+    "status":"$status",
+    "body_bytes_sent":"$body_bytes_sent",
+    "http_referer":"$http_referer",
+    "request_uri":"$request_uri",
+    "http_user_agent":"$http_user_agent",
+    "remote_addr":"$remote_addr",
+    "request_time":"$request_time",
+    "request_filename":"$request_filename",
+    "http_x_forwarded_for":"$http_x_forwarded_for",
+    "fastcgi_script_name":"$fastcgi_script_name",
+    "document_root":"$document_root",
+    "request_body":"$request_body",
+    "response_body":"$resp_body"}';
+    access_log  logs/access.log  main;
+    sendfile        on;
+    server_tokens off;
+    keepalive_timeout 75;
+    server_names_hash_bucket_size 128;
+    client_header_buffer_size 128k;
+    large_client_header_buffers 4 128k;
+    server_name_in_redirect off;
+    client_max_body_size 10m;
+    client_body_buffer_size 128k;
+    tcp_nopush     on;
+    tcp_nodelay    on;
+
+    gzip  on;                        
+    gzip_min_length 1k;              
+    gzip_buffers 4 16k;
+    gzip_http_version 1.1;
+    gzip_comp_level 3;
+    gzip_disable "MSIE [1-6].";
+    gzip_types text/plain application/x-javascript text/css text/xml application/xml image/jpeg image/gif image/png;
+    gzip_vary on;
+    gzip_proxied any;
+
+    proxy_http_version 1.1;
+    proxy_redirect off;
+    proxy_connect_timeout 300;       
+    proxy_send_timeout 300;       
+    proxy_read_timeout 300;           
+    proxy_buffer_size 16k;          
+    proxy_buffers 6 64k;            
+    proxy_busy_buffers_size 128k;    
+    proxy_temp_file_write_size 64k; 
+    proxy_set_header   Host  $host;
+    open_file_cache max=204800 inactive=20s;
+    open_file_cache_min_uses 1;
+    open_file_cache_valid 60s;
+    proxy_cache_path '${nginx_install_path}'/nginx/cache/proxy_cache levels=1:2 keys_zone=cache_one:100m inactive=1d max_size=30g; #100m和30G，按照服务要求，适当增大
+    #################### JumpSever include #########################
+    include vhost/*.conf;
+    ####################undeifne domain #########################
+    server {
+        listen 80 default_server;
+        server_name _;
+        if ($request_method = POST) {
+            return 307 https://$host$request_uri;
+        }	
+        access_log '${nginx_install_path}'/nginx/logs/nginx_undefine.access.log;
+        error_log  logs/nginx_error.log;
+        error_log  /dev/null crit;
+        return 301 https://www.baidu.com/s?wd=wtf;
+    }
+}
+''' >> $nginx_install_path/nginx/conf/nginx.conf
 }
 openresty_install 1.19.3.1
