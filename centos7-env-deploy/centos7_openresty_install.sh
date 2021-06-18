@@ -109,9 +109,23 @@ overwrite_nginx_configfile(){
 local cores=$( awk -F: '/model name/ {core++} END {print core}' /proc/cpuinfo )
 local openfilelimits=$( ulimit -a|grep "open files" )
 mv $nginx_install_path/nginx/conf/nginx.conf $nginx_install_path/nginx/conf/nginx.confbak
+case "$cores" in
+2)
+    echo  "双核CPU"
+    cpu_affinity="01 10"
+;;
+[4-8])
+    echo "4-8核CPU"
+    cpu_affinity="0001 0010 0100 1000"
+;;
+[8-20])
+    echo "8核以上CPU"
+    cpu_affinity="00000001 00000010 00000100 00001000 00010000 00100000 01000000 10000000"
+;;
 echo '''
 user  www;
 worker_processes  '${cores}';
+worker_cpu_affinity '${cpu_affinity}';
 error_log  logs/error.log;
 #pid        logs/nginx.pid;
 events {
