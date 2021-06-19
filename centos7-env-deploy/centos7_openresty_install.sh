@@ -36,7 +36,15 @@ openresty_install(){
     cd $pkg_dir && echo "正在执行Openresty安装"
     tar -zxvf $openresty
     cd $pkg_dir/openresty-$openresty_version
-    if [[ $openresty_version =~ "1.19" ]]
+    if [[ $openresty_version =~ "1.19.9" ]]
+    then
+        echo "支持的版本"
+        sed -i 's/\.openssl\///g' $pkg_dir/openresty-$openresty_version/bundle/nginx-1.19.9/auto/lib/openssl/conf
+        sed -i 's/openssl\/include\/openssl\/ssl.h/include\/openssl\/ssl.h/g' $pkg_dir/openresty-$openresty_version/bundle/nginx-1.19.9/auto/lib/openssl/conf
+    else
+        echo "非1.19.9版本" && sleep 2s
+    fi
+    if [[ $openresty_version =~ "1.19.3" ]]
     then
         echo "支持的版本"
         sed -i 's/\.openssl\///g' $pkg_dir/openresty-$openresty_version/bundle/nginx-1.19.3/auto/lib/openssl/conf
