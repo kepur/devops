@@ -2,8 +2,9 @@ node_root_url='https://nodejs.org/dist'
 #https://nodejs.org/dist/v6.17.1/node-v6.17.1-linux-x64.tar.gz
 #https://nodejs.org/dist/v12.20.0/node-v12.20.0.tar.gz
 #https://nodejs.org/dist/v12.20.0/node-v12.20.0-linux-x64.tar.gz
- https://nodejs.org/dist/v12.20.0/node-V12.20.0-linux-x64.tar.gz
-https://nodejs.org/dist/node-V12.20.0-linux-x64.tar.gz
+#https://nodejs.org/dist/v12.20.0/node-V12.20.0-linux-x64.tar.gz
+https://nodejs.org/dist/v12.20.0/
+https://nodejs.org/dist/v12.20.0/node-v12.20.0-linux-x64.tar.gz
 pkg_dir=/opt/pkg_dir
 node_install(){
     if test -z "$(ls | find ~/ -name node && find ~/ -name node_modules | rpm -qa node )"; then
@@ -23,13 +24,13 @@ node_install(){
     fi
     node_version=$1
 	echo $node_version
-	nodejs=node-V$node_version-linux-x64.tar.gz
+	nodejs=node-v$node_version-linux-x64.tar.gz
 	echo "$nodejs"
 	if [ -f "$pkg_dir$nodejs" ];then
 		echo " 文件 $nodejs 找到 "
 	else
 		echo "文件 $nodejs 不存在将自动下载" 
-		if ! wget -c -t3 -T60 ${node_root_url}/V$node_version/$nodejs -P $pkg_dir/; then
+		if ! wget -c -t3 -T60 ${node_root_url}/v$node_version/$nodejs -P $pkg_dir/; then
             echo "Failed to download $nodejs \n 下载$nodejs失败, 请手动下载到${pkg_dir} \n please download it to ${pkg_dir} directory manually and try again."
             echo -e "请把下列安装包放到$pkg_dir目录下 \n\n " $$ sleep 2s
 			exit 1
