@@ -6,11 +6,12 @@ python_root_url="https://www.python.org/ftp/python/"
 mysql_root_url="https://repo.mysql.com//"
 openresty_root_url="https://openresty.org/download/"
 redis_root_url="https://download.redis.io/releases/"
+erlang_root_url="https://erlang.org/download/"
+rabbitmq_root_url='https://github.com/rabbitmq/rabbitmq-server/releases/download/'
 nginx_install_path=/opt
 service_web_domain=""
 service_webapi_domain=""
 service_websocket_domain=""
-
 if [ ! -d "/opt/pkg_dir" ];then
   mkdir -p /opt/pkg_dir
   else
@@ -30,7 +31,6 @@ get_os_info(){
     local lbit=$( getconf LONG_BIT )
     local host=$( hostname )
     local kern=$( uname -r )
-
     echo "########## System Information ##########"
     echo 
     echo "CPU model            : ${cname}"
@@ -93,14 +93,14 @@ openssl_install(){
 	fi
     cd $pkg_dir && echo "正在执行Openssl安装"
 	tar -zxvf $openssl && cd openssl-$openssl_version
-	mkdir -p /usr/local/openssl-$openssl_version
-	./config --prefix=/usr/local/openssl-$openssl_version
+	mkdir -p /usr/local/openssl
+	./config --prefix=/usr/local/openssl
 	make && make install
 	\mv /usr/bin/openssl /usr/bin/openssl.old
 	\mv /usr/include/openssl /usr/include/openssl.old
-	ln -s /usr/local/openssl-$openssl_version/bin/openssl /usr/bin/openssl
-	ln -s /usr/local/openssl-$openssl_version/include/openssl/ /usr/include/openssl
-	echo "/usr/local/openssl-$openssl_version/lib/">>/etc/ld.so.conf
+	ln -s /usr/local/openssl/bin/openssl /usr/bin/openssl
+	ln -s /usr/local/openssl/include/openssl/ /usr/include/openssl
+	echo "/usr/local/openssl/lib/">>/etc/ld.so.conf
 	ldconfig
 	openssl version -a
 }
@@ -260,67 +260,77 @@ openresty_install(){
     [Install]
     WantedBy=multi-user.target
     ''' >> /lib/systemd/system/nginx.service
+    if [ ! -d "${nginx_install_path}/nginx/cache/proxy_cache" ];then
+        mkdir -p /opt/pkg_dir
+    else
+        echo "文件夹${nginx_install_path}/nginx/cache/proxy_cache 已经存在"
+    fi
+    if [ ! -d "${nginx_install_path}/nginx/vhost" ];then
+        mkdir -p ${nginx_install_path}/nginx/vhost
+    else
+        echo "文件夹${nginx_install_path}/nginx/vhost已经存在"
+    fi
     systemctl enable nginx.service
     systemctl start nginx.service
     systemctl enable ntpd
     systemctl enable nginx
 }
 overwrite_nginx_configfile(){
-worker_processes=`expr $( awk -F: '/model name/ {core++} END {print core}' /proc/cpuinfo ) \* 2` 
-openfilelimits=$( ulimit -a|grep "open files" )
-mv $nginx_install_path/nginx/conf/nginx.conf $nginx_install_path/nginx/conf/nginx.confbak
-case "$cores" in
-2)
-    echo  "双核CPU"
-    cpu_affinity="01 10"
-;;
-[4-8])
-    echo "4-8核CPU"
-    cpu_affinity="0001 0010 0100 1000"
-;;
-[8-20])
-    echo "8核以上CPU"
-    cpu_affinity="00000001 00000010 00000100 00001000 00010000 00100000 01000000 10000000"
-;;
-echo '''
+    worker_processes=`expr $( awk -F: '/model name/ {core++} END {print core}' /proc/cpuinfo ) \* 2` 
+    openfilelimits=$( ulimit -a|grep "open files" | awk {print $3 })
+    mv $nginx_install_path/nginx/conf/nginx.conf $nginx_install_path/nginx/conf/nginx.confbak
+    case "$cores" in
+    2)
+        echo  "双核CPU"
+        cpu_affinity="01 10"
+    ;;
+    [4-8])
+        echo "4-8核CPU"
+        cpu_affinity="0001 0010 0100 1000"
+    ;;
+    [8-20])
+        echo "8核以上CPU"
+        cpu_affinity="00000001 00000010 00000100 00001000 00010000 00100000 01000000 10000000"
+    ;;
+echo "
 user  www;
-worker_processes  '${worker_processes}';
-worker_cpu_affinity '${cpu_affinity}';
+worker_processes  ${worker_processes};
+worker_cpu_affinity ${cpu_affinity};
 error_log  logs/error.log;
 #pid        logs/nginx.pid;
 events {
-    worker_connections  '${openfilelimits}';
+    worker_connections  ${openfilelimits};
 }
 http {
     include       mime.types;
     default_type  application/octet-stream;
 
-    map $HTTP_CF_CONNECTING_IP  $clientRealIp {
-    ""    $remote_addr;
-    ~^(?P<firstAddr>[0-9.]+),?.*$    $firstAddr;
+    map \$HTTP_CF_CONNECTING_IP  \$clientRealIp {
+    \"\"   \$remote_addr;
+    ~^(?P<firstAddr>[0-9.]+),?.*$   \$firstAddr;
     }
-    proxy_set_header X-Real-IP $remote_addr;
-    #proxy_set_header X-Real-IP $clientRealIp;
-    log_format  main  "$http_x_forwarded_for- $remote_user [$time_local] $request 
-                      $status $body_bytes_sent $http_referer 
-                      $http_user_agent $http_x_forwarded_for ";
-    log_format  main_json '\{"time_local"\:'[$time_local]'\,
-    "ClientRealIp"\:'$clientRealIp'\,
-    "request_domain"\:'$http_host'\,
-    "request"\:'$request'\,
-    "status"\:'$status'\,
-    "body_bytes_sent"\:'$body_bytes_sent'\,
-    "http_referer"\:'$http_referer'\,
-    "request_uri"\:'$request_uri'\,
-    "http_user_agent"\:'$http_user_agent'\,
-    "remote_addr"\:'$remote_addr'\,
-    "request_time"\:'$request_time'\,
-    "request_filename"\:'$request_filename'\,
-    "http_x_forwarded_for"\:'$http_x_forwarded_for'\,
-    "fastcgi_script_name"\:'$fastcgi_script_name'\,
-    "document_root"\:'$document_root'\,
-    "request_body"\:'$request_body'\,
-    "response_body"\:'$resp_body" }'\;
+    proxy_set_header X-Real-IP \$remote_addr;
+    #proxy_set_header X-Real-IP \$clientRealIp;
+    log_format  main  \"\$http_x_forwarded_for- \$remote_user [\$time_local] \$request
+                    \$status \$body_bytes_sent \$http_referer
+                    \$http_user_agent \$http_x_forwarded_for\";
+    log_format  main_json  ' {\"time_local\":\"\$time_local\",
+    \"ClientRealIp\":\"\$clientRealIp\",
+    \"request_domain\":\"\$http_host\",
+    \"request\":\"\$request\",
+    \"status\":\"\$status\",
+    \"body_bytes_sent\":\"\$body_bytes_sent\",
+    \"http_referer\":\"\$http_referer\",
+    \"request_uri\":\"\$request_uri\",
+    \"http_user_agent\":\"\$http_user_agent\",
+    \"remote_addr\":\"\$remote_addr\",
+    \"request_time\":\"\$request_time\",
+    \"request_filename\":\"\$request_filename\",
+    \"http_x_forwarded_for\":\"\$http_x_forwarded_for\",
+    \"fastcgi_script_name\":\"\$fastcgi_script_name\",
+    \"document_root\":\"\$document_root\",
+    \"request_body\":\"\$request_body\",
+    \"response_body\":\"\$resp_body\"} ';
     access_log  logs/access.log  main;
     sendfile        on;
     server_tokens off;
@@ -353,158 +363,158 @@ http {
     proxy_buffers 6 64k;            
     proxy_busy_buffers_size 128k;    
     proxy_temp_file_write_size 64k; 
-    proxy_set_header   Host  $host;
+    proxy_set_header   Host  \$host;
     open_file_cache max=204800 inactive=20s;
     open_file_cache_min_uses 1;
     open_file_cache_valid 60s;
-    proxy_cache_path '${nginx_install_path}'/nginx/cache/proxy_cache levels=1:2 keys_zone=cache_one:100m inactive=1d max_size=30g; #100m和30G，按照服务要求，适当增大
+    proxy_cache_path ${nginx_install_path}/nginx/cache/proxy_cache levels=1:2 keys_zone=cache_one:100m inactive=1d max_size=30g; #100m和30G，按照服务要求，适当增大
     #################### JumpSever include #########################
     include vhost/*.conf;
     ####################undeifne domain #########################
     server {
         listen 80 default_server;
         server_name _;
-        if ($request_method = POST) {
-            return 307 https://$host$request_uri;
+        if (\$request_method = POST) {
+            return 307 https://\$host\$request_uri;
         }	
-        access_log '${nginx_install_path}'/nginx/logs/nginx_undefine.access.log;
+        access_log ${nginx_install_path}/nginx/logs/nginx_undefine.access.log;
         error_log  logs/nginx_error.log;
         error_log  /dev/null crit;
         return 301 https://www.baidu.com/s?wd=wtf;
     }
 }
-''' >> $nginx_install_path/nginx/conf/nginx.conf
+" >> $nginx_install_path/nginx/conf/nginx.conf
 echo '''
 ########################设置IP白名单############
 location / {
-    if ( $geo = 1 ){
+    if ( \$geo = 1 ){
         return 403;
     }
 ########################拦截GET、POST 以及 HEAD 之外的请求############
-if ($request_method !~ ^(GET|HEAD|POST)$ ) {
+if (\$request_method !~ ^(GET|HEAD|POST)\$ ) {
 	return    444;
 }
 ########################拦截GET、POST 以及 HEAD 之外的请求############
 
-#location ~ .*\.(php|cgi|jsp|asp|aspx)$ {
-location ~ .*\.(jsp|asp|aspx)$ {
+#location ~ .*\.(php|cgi|jsp|asp|aspx)\$ {
+location ~ .*\.(jsp|asp|aspx)\$ {
     return 301 http://www.baidu.com/s?wd=mmp;
 }
 ######################## Block SQL injections 防止SQL注入#############
-set $block_sql_injections 0;
-if ($query_string ~ "union.*select.*\(") {
-set $block_sql_injections 1;
+set \$block_sql_injections 0;
+if (\$query_string ~ \"union.*select.*\(") {
+set \$block_sql_injections 1;
 }
-if ($query_string ~ "union.*all.*select.*") {
-set $block_sql_injections 1;
+if (\$query_string ~ \"union.*all.*select.*\") {
+set \$block_sql_injections 1;
 }
-if ($query_string ~ "concat.*\(") {
-set $block_sql_injections 1;
+if (\$query_string ~ \"concat.*\(\") {
+set \$block_sql_injections 1;
 }
-if ($block_sql_injections = 1) {
+if (\$block_sql_injections = 1) {
 return 403;
 }
 
 ########################lock file injections防止恶意请求############
 
-set $block_file_injections 0;
-if ($query_string ~ "[a-zA-Z0-9_]=http://") {
-set $block_file_injections 1;
+set \$block_file_injections 0;
+if (\$query_string ~ \"[a-zA-Z0-9_]=http://\") {
+set \$block_file_injections 1;
 }
-if ($query_string ~ "[a-zA-Z0-9_]=(\.\.//?)+") {
-set $block_file_injections 1;
+if (\$query_string ~ \"[a-zA-Z0-9_]=(\.\.//?)+\") {
+set \$block_file_injections 1;
 }
-if ($query_string ~ "[a-zA-Z0-9_]=/([a-z0-9_.]//?)+") {
-set $block_file_injections 1;
+if (\$query_string ~ \"[a-zA-Z0-9_]=/([a-z0-9_.]//?)+\") {
+set \$block_file_injections 1;
 }
-if ($block_file_injections = 1) {
+if (\$block_file_injections = 1) {
 return 403;
 }
 
 ########################Block common exploits防止XSS注入############
-set $block_common_exploits 0;
-if ($query_string ~ "(<|%3C).*script.*(>|%3E)") {
-set $block_common_exploits 1;
+set \$block_common_exploits 0;
+if (\$query_string ~ \"(<|%3C).*script.*(>|%3E)\") {
+set \$block_common_exploits 1;
 }
-if ($query_string ~ "GLOBALS(=|\[|\%[0-9A-Z]{0,2})") {
-set $block_common_exploits 1;
+if (\$query_string ~ \"GLOBALS(=|\[|\%[0-9A-Z]{0,2})\") {
+set \$block_common_exploits 1;
 }
-if ($query_string ~ "_REQUEST(=|\[|\%[0-9A-Z]{0,2})") {
-set $block_common_exploits 1;
+if (\$query_string ~ \"_REQUEST(=|\[|\%[0-9A-Z]{0,2})\") {
+set \$block_common_exploits 1;
 }
-if ($query_string ~ "proc/self/environ") {
-set $block_common_exploits 1;
+if (\$query_string ~ \"proc/self/environ\") {
+set \$block_common_exploits 1;
 }
-if ($query_string ~ "mosConfig_[a-zA-Z_]{1,21}(=|\%3D)") {
-set $block_common_exploits 1;
+if (\$query_string ~ \"mosConfig_[a-zA-Z_]{1,21}(=|\%3D)\") {
+set \$block_common_exploits 1;
 }
-if ($query_string ~ "base64_(en|de)code\(.*\)") {
-set $block_common_exploits 1;
+if (\$query_string ~ \"base64_(en|de)code\(.*\)\") {
+set \$block_common_exploits 1;
 }
-if ($block_common_exploits = 1) {
+if (\$block_common_exploits = 1) {
 return 403;
 }
 
 ########################Block common exploits #############
-set $block_spam 0;
-if ($query_string ~ "\b(ultram|unicauca|valium|viagra|vicodin|xanax|ypxaieo)\b") {
-set $block_spam 1;
+set \$block_spam 0;
+if (\$query_string ~ \"\b(ultram|unicauca|valium|viagra|vicodin|xanax|ypxaieo)\b\") {
+set \$block_spam 1;
 }
-if ($query_string ~ "\b(erections|hoodia|huronriveracres|impotence|levitra|libido)\b") {
-set $block_spam 1;
+if (\$query_string ~ \"\b(erections|hoodia|huronriveracres|impotence|levitra|libido)\b\") {
+set \$block_spam 1;
 }
-if ($query_string ~ "\b(ambien|blue\spill|cialis|cocaine|ejaculation|erectile)\b") {
-set $block_spam 1;
+if (\$query_string ~ \"\b(ambien|blue\spill|cialis|cocaine|ejaculation|erectile)\b\") {
+set \$block_spam 1;
 }
-if ($query_string ~ "\b(lipitor|phentermin|pro[sz]ac|sandyauer|tramadol|troyhamby)\b") {
-set $block_spam 1;
+if (\$query_string ~ \"\b(lipitor|phentermin|pro[sz]ac|sandyauer|tramadol|troyhamby)\b\") {
+set \$block_spam 1;
 }
-if ($block_spam = 1) {
+if (\$block_spam = 1) {
 return 403;
 } 
 ########################Block user agents  防止用户代理请求 #############
-set $block_user_agents 0;
+set \$block_user_agents 0;
 # Dont disable wget if you need it to run cron jobs!
-#if ($http_user_agent ~ "Wget") {
-# set $block_user_agents 1;
+#if (\$http_user_agent ~ \"Wget\") {
+# set \$block_user_agents 1;
 #}
 
 # Disable Akeeba Remote Control 2.5 and earlier
-if ($http_user_agent ~ "Indy Library") {
-set $block_user_agents 1;
+if (\$http_user_agent ~ \"Indy Library\") {
+set \$block_user_agents 1;
 }
 
 # Common bandwidth hoggers and hacking tools.
-if ($http_user_agent ~ "libwww-perl") {
-set $block_user_agents 1;
+if (\$http_user_agent ~ \"libwww-perl\") {
+set \$block_user_agents 1;
 }
-if ($http_user_agent ~ "GetRight") {
-set $block_user_agents 1;
+if (\$http_user_agent ~ \"GetRight\") {
+set \$block_user_agents 1;
 }
-if ($http_user_agent ~ "GetWeb!") {
-set $block_user_agents 1;
+if (\$http_user_agent ~ \"GetWeb!\") {
+set \$block_user_agents 1;
 }
-if ($http_user_agent ~ "Go!Zilla") {
-set $block_user_agents 1;
+if (\$http_user_agent ~ \"Go!Zilla\") {
+set \$block_user_agents 1;
 }
-if ($http_user_agent ~ "Download Demon") {
-set $block_user_agents 1;
+if (\$http_user_agent ~ \"Download Demon\") {
+set \$block_user_agents 1;
 }
-if ($http_user_agent ~ "Go-Ahead-Got-It") {
-set $block_user_agents 1;
+if (\$http_user_agent ~ \"Go-Ahead-Got-It\") {
+set \$block_user_agents 1;
 }
-if ($http_user_agent ~ "TurnitinBot") {
-set $block_user_agents 1;
+if (\$http_user_agent ~ \"TurnitinBot\") {
+set \$block_user_agents 1;
 }
-if ($http_user_agent ~ "GrabNet") {
-set $block_user_agents 1;
+if (\$http_user_agent ~ \"GrabNet\") {
+set \$block_user_agents 1;
 }
-if ($block_user_agents = 1) {
+if (\$block_user_agents = 1) {
 return 403;
 }
 ''' >> $nginx_install_path/nginx/conf/vhost/commom.server.module
 echo '''
-geo $clientRealIp $geo{
+geo \$clientRealIp \$geo{
 default 1;
 127.0.0.1/32 0;
 #vdi
@@ -535,77 +545,70 @@ default 1;
 18.162.54.122 0;
 18.162.149.64 0;
 }''' >$nginx_install_path/nginx/conf/vhost/whiteip.map
-
-service_web_domain=""
-service_webapi_domain=""
-service_websocket_domain=""
-echo '''
- server {
-        listen       80;
-        server_name  '${service_web_domain}';
-        root         /data/nginx/pubcloud-w;
-        access_log '${nginx_install_path}'/nginx/logs/'${service_web_domain}'_access.log main_json;
-        error_log '${nginx_install_path}'/nginx/logs/'${service_web_domain}'_error.log;
-        set $resp_body "";
-        body_filter_by_lua '
-        local resp_body = string.sub(ngx.arg[1],1,1000)
-        ngx.ctx.buffered=(ngx.ctx.buffered or "")..resp_body
-        if ngx.arg[2]then
-        ngx.var.resp_body = ngx.ctx.buffered
-        end';
-        location / {
-        if ( $geo = 1 ){
-            return 403;
-        }
-        add_header Access-Control-Allow-Orgin '*';
-        index index.html;
-        }
-        error_page 404 /404.html;
-        location = /404.html {
-        }
-
-        error_page 500 502 503 504 /50x.html;
-        location = /50x.html {
-        }
-    }
-''' >$nginx_install_path/nginx/conf/vhost/pubcloudapi.conf
-echo '''
-   server {
-        listen       80;
-        server_name  '${service_webapi_domain}';
-        access_log '${nginx_install_path}'/nginx/logs/'${service_webapi_domain}'_access.log main_json;
-        error_log '${nginx_install_path}'/nginx/logs/'${service_webapi_domain}'_error.log;
-        set $resp_body "";
-        body_filter_by_lua '
-        local resp_body = string.sub(ngx.arg[1],1,1000)
-        ngx.ctx.buffered=(ngx.ctx.buffered or "")..resp_body
-        if ngx.arg[2]then
-        ngx.var.resp_body = ngx.ctx.buffered
-        end
-        ';
-        location / {
-        add_header Access-Control-Allow-Orgin '*';
-        proxy_pass http://127.0.0.1:10000/;
-        }
-        error_page 404 /404.html;
-        location = /404.html {
-        }
-
-        error_page 500 502 503 504 /50x.html;
-        location = /50x.html {
-        }
-    }
-''' >$nginx_install_path/nginx/conf/vhost/pubcloud.conf
-echo '''
-server {
+echo "server {
     listen       80;
-    server_name  '${service_websocket_domain}';
-    access_log '${nginx_install_path}'/nginx/logs/'${service_websocket_domain}'_access.log main_json;
-    error_log '${nginx_install_path}'/nginx/logs/'${service_websocket_domain}'_error.log;
-    set $resp_body "";
+    server_name  ${service_web_domain};
+    root         /data/nginx/pubcloud-w;
+    access_log ${nginx_install_path}/nginx/logs/${service_web_domain}_access.log main_json;
+    error_log ${nginx_install_path}/nginx/logs/${service_web_domain}_error.log;
+    set \$resp_body \"\";
     body_filter_by_lua '
     local resp_body = string.sub(ngx.arg[1],1,1000)
-    ngx.ctx.buffered=(ngx.ctx.buffered or "")..resp_body
+    ngx.ctx.buffered=(ngx.ctx.buffered or \"\")..resp_body
+    if ngx.arg[2]then
+    ngx.var.resp_body = ngx.ctx.buffered
+    end';
+    location / {
+    if ( \$geo = 1 ){
+        return 403;
+    }
+    add_header Access-Control-Allow-Orgin '*';
+    index index.html;
+    }
+    error_page 404 /404.html;
+    location = /404.html {
+    }
+
+    error_page 500 502 503 504 /50x.html;
+    location = /50x.html {
+    }
+}
+" >$nginx_install_path/nginx/conf/vhost/pubcloudapi.conf
+echo "server {
+    listen       80;
+    server_name  ${service_webapi_domain};
+    access_log ${nginx_install_path}/nginx/logs/${service_webapi_domain}_access.log main_json;
+    error_log ${nginx_install_path}/nginx/logs/${service_webapi_domain}_error.log;
+    set $resp_body \"\";
+    body_filter_by_lua '
+    local resp_body = string.sub(ngx.arg[1],1,1000)
+    ngx.ctx.buffered=(ngx.ctx.buffered or \"\")..resp_body
+    if ngx.arg[2]then
+    ngx.var.resp_body = ngx.ctx.buffered
+    end
+    ';
+    location / {
+    add_header Access-Control-Allow-Orgin '*';
+    proxy_pass http://127.0.0.1:10000/;
+    }
+    error_page 404 /404.html;
+    location = /404.html {
+    }
+
+    error_page 500 502 503 504 /50x.html;
+    location = /50x.html {
+    }
+}
+" >$nginx_install_path/nginx/conf/vhost/pubcloud.conf
+echo "server {
+    listen       80;
+    server_name  ${service_websocket_domain};
+    access_log '${nginx_install_path}/nginx/logs/${service_websocket_domain}_access.log main_json;
+    error_log ${nginx_install_path}/nginx/logs/${service_websocket_domain}_error.log;
+    set \$resp_body \"\";
+    body_filter_by_lua '
+    local resp_body = string.sub(ngx.arg[1],1,1000)
+    ngx.ctx.buffered=(ngx.ctx.buffered or \"\")..resp_body
     if ngx.arg[2]then
     ngx.var.resp_body = ngx.ctx.buffered
     end
@@ -617,8 +620,8 @@ server {
     location /ws/result {
     add_header Access-Control-Allow-Orgin '*';
     proxy_http_version 1.1;
-    proxy_set_header Upgrade $http_upgrade;
-    proxy_set_header Connection "upgrade";
+    proxy_set_header Upgrade \$http_upgrade;
+    proxy_set_header Connection \"upgrade\";
     proxy_pass http://127.0.0.1:10001/;
     }
     error_page 404 /404.html;
@@ -629,7 +632,58 @@ server {
     location = /50x.html {
     }
 }
-''' >$nginx_install_path/nginx/conf/vhost/pubcloudws.conf
+" >$nginx_install_path/nginx/conf/vhost/pubcloudws.conf
+erlang_install(){
+    erlang_version=$1
+	echo $erlang_version
+	Erlang=otp_src_$erlang_version.tar.gz
+	echo "$Erlang"
+	if [ -f "$pkg_dir$Erlang" ];then
+		echo " 文件 $Erlang 找到 "
+	else
+		echo "文件 $Erlang 不存在将自动下载" 
+		if ! wget -c -t3 -T60 ${erlang_root_url}/$Erlang -P $pkg_dir/; then
+            echo "Failed to download $Erlang \n 下载$Erlang失败, 请手动下载到${pkg_dir} \n please download it to ${pkg_dir} directory manually and try again."
+            echo -e "请把下列安装包放到$pkg_dir目录下 \n\n " $$ sleep 2s
+			exit 1
+        fi
+	fi
+    cd $pkg_dir && echo "正在执行Erlang安装"
+	tar -zxvf $Erlang
+	mv otp_src_$erlang_version /usr/local/
+	cd /usr/local/otp_src_$erlang_version
+	./configure --prefix=/usr/local/erlang/ --with-ssl=/usr/local/openssl
+	make install 
+	echo 'export PATH=$PATH:/usr/local/erlang/bin' >>/etc/profile
+	source /etc/profile
+	ln -s /usr/local/erlang/bin/erl /usr/bin/erl
+}
+rabbit_mq_install(){
+    rabbitmq_version=$1
+	echo $rabbitmq_version
+	rabbitmq=rabbitmq-server-generic-unix-$rabbitmq_version.tar.xz
+	echo "$rabbitmq"
+	if [ -f "$pkg_dir$rabbitmq" ];then
+		echo " 文件 $rabbitmq 找到 "
+	else
+		echo "文件 $rabbitmq 不存在将自动下载" 
+		if ! wget -c -t3 -T60 ${erlang_root_url}/$rabbitmq_version/$rabbitmq -P $pkg_dir/; then
+            echo "Failed to download $rabbitmq \n 下载$rabbitmq, 请手动下载到${pkg_dir} \n please download it to ${pkg_dir} directory manually and try again."
+            echo -e "请把下列安装包放到$pkg_dir目录下 \n\n " $$ sleep 2s
+			exit 1
+        fi
+	fi
+    cd $pkg_dir && echo "正在执行Erlang安装"
+	yum install -y xz && xz -d $rabbitmq
+	tar -xvf rabbitmq-server-generic-unix-$rabbitmq_version.tar
+	mv rabbitmq_server-$rabbitmq_version /usr/local/
+	mv /usr/local/rabbitmq_server-$rabbitmq_version /usr/local/rabbitmq
+	echo 'export PATH=$PATH:/usr/local/rabbitmq/sbin' >>/etc/profile
+	source /etc/profile
+	rabbitmq-server -detached
+	rabbitmq-plugins enable rabbitmq_management
+}
 openresty_install 1.19.3.1
 read -p "请输入mysqlroot的密码" newMysqlPass
 mysql574_install $newMysqlPass
+

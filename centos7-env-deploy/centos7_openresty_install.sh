@@ -84,7 +84,7 @@ openresty_install(){
 overwrite_nginx_configfile(){
 cores=$( awk -F: '/model name/ {core++} END {print core}' /proc/cpuinfo )
 worker_processes=`expr $cores \* 2` 
-openfilelimits=$( ulimit -a|grep "open files" )
+openfilelimits=$( ulimit -a|grep "open files" | awk '{ print $4 }' )
 mv $nginx_install_path/nginx/conf/nginx.conf $nginx_install_path/nginx/conf/nginx.confbak
 case "$cores" in
 2)
