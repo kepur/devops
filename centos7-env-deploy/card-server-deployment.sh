@@ -643,6 +643,7 @@ echo "server {
     }
 }
 " >$nginx_install_path/nginx/conf/vhost/pubcloudws.conf
+echo ""
 echo '''
 BASEPATH='$nginx_install_path'/nginx/logs
 ACCESSPATH='$nginx_install_path'/nginx/logs/access_logs
@@ -668,8 +669,11 @@ touch $BASEPATH/$elog;
 kill -USR1 `cat /var/run/nginx.pid`;
 done
 ''' >$nginx_install_path/nginx/bin/nginxcutlog.sh
+    curr_user=`echo $USER`
+    echo "1 0 * * * bash $nginx_install_path/nginx/bin/nginxcutlog.sh" >> "/var/spool/cron/$curr_user"
     systemctl restart nginx && sleep 5s
 }
+
 erlang_install(){
     erlang_version=$1
 	echo $erlang_version
