@@ -1,15 +1,21 @@
-
+#手动配置
 workdir=/opt/pkg_dir/
 pkg_dir=/opt/pkg_dir
+openssl_root_url="https://www.openssl.org/source/"
+python_root_url="https://www.python.org/ftp/python/"
+mysql_root_url="https://repo.mysql.com//"
+openresty_root_url="https://openresty.org/download/"
+redis_root_url="https://download.redis.io/releases/"
+nginx_install_path=/opt
+service_web_domain=""
+service_webapi_domain=""
+service_websocket_domain=""
+
 if [ ! -d "/opt/pkg_dir" ];then
   mkdir -p /opt/pkg_dir
   else
   echo "文件夹已经存在"
 fi
-openssl_root_url="https://www.openssl.org/source/"
-python_root_url="https://www.python.org/ftp/python/"
-
-
 get_os_info(){
     IP=$( ip addr | egrep -o '[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}' | egrep -v "^192\.168|^172\.1[6-9]\.|^172\.2[0-9]\.|^172\.3[0-2]\.|^10\.|^127\.|^255\.|^0\." | head -n 1 )
     [ -z ${IP} ] && IP=$( wget -qO- -t1 -T2 ipv4.icanhazip.com )
@@ -63,7 +69,6 @@ change_yum_source(){
     mv /etc/yum.repos.d/Centos-7.repo /etc/yum.repos.d/CentOs-Base.repo
     yum clean all
     yum makecache
-
 }
 yum_init(){
     yum update -y && yum install gcc pcre pcre-devel zlib-devel openssl perl openssl-devel libffi-devel -y
@@ -168,42 +173,44 @@ python_install(){
 	sed -i 's/python/python2/g' /usr/bin/yum
 	sed -i 's/python/python2/g' /usr/libexec/urlgrabber-ext-down
 }
-mysql574_install(){
-    cd /opt/
+mysql_install(){
+    #https://repo.mysql.com//mysql80-community-release-el7-3.noarch.rpm
+    #https://repo.mysql.com//mysql57-community-release-el7-8.noarch.rpm
+    #mysqlurl="https://jp-1301785062.cos.ap-tokyo.myqcloud.com/mysql57-community-release-el7-8.noarch.rpm"
+    #检查是否安装
+    #yum repolist enabled | grep "mysql.*-community.*"
     echo "正在执行mysql安装"
-    mysql="mysql57-community-release-el7-8.noarch.rpm"
-    mysqlurl="https://jp-1301785062.cos.ap-tokyo.myqcloud.com/mysql57-community-release-el7-8.noarch.rpm"
-    wget $mysqlurl
-
-	read -p "请输入mysqlroot的密码" NewPass
-	rpm -ivh mysql57-community-release-el7-8.noarch.rpm
-	yum -y install mysql-server
+    mysqlpasswd=$1
+    mysql_version="mysql57"
+    #mysql_version="mysql80"
+    if [[ $openresty_version =~ "mysql57" ]]
+    then
+        mysql=Python-$mysql_version-community-release-el7-8.noarch.rpm
+    else
+        mysql=Python-$mysql_version-community-release-el7-3.noarch.rpm
+    fi
+    if [ -f "$pkg_dir$python" ];then
+		echo " 文件 $python 找到 "
+	else
+		echo "文件 $python 不存在将自动下载" 
+		if ! wget -c -t3 -T60 ${mysql_root_url}/$mysql -P $pkg_dir/; then
+            echo "Failed to download $mysql \n 下载$mysql, 请手动下载到${pkg_dir} \n please download it to ${pkg_dir} directory manually and try again."
+            echo -e "请把下列安装包放到$pkg_dir目录下 \n\n " $$ sleep 2s
+			exit 1
+        fi
+	fi
+    cd $pkg_dir && rpm -ivh mysql57-community-release-el7-8.noarch.rpm
+	yum -y install mysql-server mysql-devel
 	service mysqld restart
-	systemctl enable mysqld.services
+	systemctl enable mysqld.services	
 	oldpass=`grep pass /var/log/mysqld.log | awk '{print $NF}'`
-	/usr/bin/mysql --connect-expired-password -uroot -p${oldpass} -e "ALTER USER 'root'@'localhost' IDENTIFIED BY '"${NewPass}"';"
+	/usr/bin/mysql --connect-expired-password -uroot -p${oldpass} -e "ALTER USER 'root'@'localhost' IDENTIFIED BY '"${mysqlpasswd}"';"
 	/usr/bin/mysql --connect-expired-password -uroot -p${oldpass} -e " flush privileges;"
 }
-# https://openresty.org/download/openresty-1.19.3.2.tar.gz
-# https://openresty.org/download/openresty-1.19.3.1.tar.gz
-# https://openresty.org/download/openresty-1.17.8.2.tar.gz
-change_yum_source(){
-    wget http://mirrors.aliyun.com/repo/Centos-7.repo
-    mv /etc/yum.repos.d/CentOs-Base.repo /etc/yum.repos.d/CentOs-Base.repo.bak
-    mv /etc/yum.repos.d/Centos-7.repo /etc/yum.repos.d/CentOs-Base.repo
-    yum clean all
-    yum makecache
-}
-yum_init(){
-    yum update -y && yum install gcc pcre pcre-devel zlib-devel openssl perl openssl-devel libffi-devel -y
-    yum groupinstall "Development tools"  -y 
-    yum install unzip zlib-devel bzip2-devel openssl-devel ncurses-devel sqlite-devel readline-devel tk-devel gdbm-devel db4-devel libpcap-devel xz-devel  readline-devel  -y
-    wget http://mirror.centos.org/centos/7/os/x86_64/Packages/libffi-devel-3.0.13-18.el7.x86_64.rpm
-}
-pkg_dir=/opt/pkg_dir
-openresty_root_url="https://openresty.org/download/"
-nginx_install_path=/opt
 openresty_install(){
+    # https://openresty.org/download/openresty-1.19.3.2.tar.gz
+    # https://openresty.org/download/openresty-1.19.3.1.tar.gz
+    # https://openresty.org/download/openresty-1.17.8.2.tar.gz
     openresty_version=$1
     echo $openresty_version
 	openresty=openresty-$openresty_version.tar.gz
@@ -294,26 +301,26 @@ http {
     }
     proxy_set_header X-Real-IP $remote_addr;
     #proxy_set_header X-Real-IP $clientRealIp;
-    log_format  main  '$http_x_forwarded_for- $remote_user [$time_local] "$request" '
-                      '$status $body_bytes_sent "$http_referer" '
-                      '"$http_user_agent" "$http_x_forwarded_for"';
-    log_format  main_json '{"time_local":[$time_local],
-    "ClientRealIp":"$clientRealIp",
-    "request_domain":"$http_host",
-    "request":"$request",
-    "status":"$status",
-    "body_bytes_sent":"$body_bytes_sent",
-    "http_referer":"$http_referer",
-    "request_uri":"$request_uri",
-    "http_user_agent":"$http_user_agent",
-    "remote_addr":"$remote_addr",
-    "request_time":"$request_time",
-    "request_filename":"$request_filename",
-    "http_x_forwarded_for":"$http_x_forwarded_for",
-    "fastcgi_script_name":"$fastcgi_script_name",
-    "document_root":"$document_root",
-    "request_body":"$request_body",
-    "response_body":"$resp_body"}';
+    log_format  main  "$http_x_forwarded_for- $remote_user [$time_local] $request 
+                      $status $body_bytes_sent $http_referer 
+                      $http_user_agent $http_x_forwarded_for ";
+    log_format  main_json '\{"time_local"\:'[$time_local]'\,
+    "ClientRealIp"\:'$clientRealIp'\,
+    "request_domain"\:'$http_host'\,
+    "request"\:'$request'\,
+    "status"\:'$status'\,
+    "body_bytes_sent"\:'$body_bytes_sent'\,
+    "http_referer"\:'$http_referer'\,
+    "request_uri"\:'$request_uri'\,
+    "http_user_agent"\:'$http_user_agent'\,
+    "remote_addr"\:'$remote_addr'\,
+    "request_time"\:'$request_time'\,
+    "request_filename"\:'$request_filename'\,
+    "http_x_forwarded_for"\:'$http_x_forwarded_for'\,
+    "fastcgi_script_name"\:'$fastcgi_script_name'\,
+    "document_root"\:'$document_root'\,
+    "request_body"\:'$request_body'\,
+    "response_body"\:'$resp_body" }'\;
     access_log  logs/access.log  main;
     sendfile        on;
     server_tokens off;
@@ -368,49 +375,11 @@ http {
 }
 ''' >> $nginx_install_path/nginx/conf/nginx.conf
 echo '''
-server {
-    listen       443 ssl;
-    server_name ezzysleep.com www.ezzysleep.com;
-    ssl_certificate  /opt/nginx/conf/ssl/ezzysleep.crt;
-    ssl_certificate_key /opt/nginx/conf/ssl/ezzysleep.key;
-    ssl_stapling on;
-    ssl_stapling_verify on;
-    ssl_session_timeout 5m;
-    ssl_protocols TLSv1 TLSv1.1 TLSv1.2;
-    ssl_prefer_server_ciphers on;
-    include /opt/nginx/conf/vhost/common.server.module;
-    access_log /opt/nginx/logs/ezzysleep.access.log main;
-    access_log /opt/nginx/logs/ezzysleep.access_json.log main_json;
-    error_log /opt/nginx/logs/ezzysleep.error.log;
-    lua_need_request_body on;
-    set $allow false;
-    set $resp_body "";
-    body_filter_by_lua '
-     local resp_body = string.sub(ngx.arg[1],1,1000)
-     ngx.ctx.buffered=(ngx.ctx.buffered or "")..resp_body
-     if ngx.arg[2]then
-        ngx.var.resp_body = ngx.ctx.buffered
-     end
-     ';
-    location / {
-        #proxy_set_header X-Forwarded-Proto  $scheme;
-        #proxy_set_header   Host $http_host:$server_port;
-        proxy_set_header X-Real-IP $http_x_forwarded_for;
-        proxy_read_timeout 300;
-        proxy_pass http://ezzysleep;
-        recursive_error_pages on;
+########################设置IP白名单############
+location / {
+    if ( $geo = 1 ){
+        return 403;
     }
-    location ~ .*\.(php|cgi|jsp|asp|aspx|apk)$ {
-        return 301 http://www.baidu.com/s?wd=睡前撸一撸网;
-    }
-    location /hello{
-        default_type 'text.plain';
-        content_by_lua 'ngx.say("hello,lua")';
-    }
-}
-''' >$nginx_install_path/nginx/conf/vhost/example.conf
-}
-echo '''
 ########################拦截GET、POST 以及 HEAD 之外的请求############
 if ($request_method !~ ^(GET|HEAD|POST)$ ) {
 	return    444;
@@ -534,4 +503,133 @@ if ($block_user_agents = 1) {
 return 403;
 }
 ''' >> $nginx_install_path/nginx/conf/vhost/commom.server.module
+echo '''
+geo $clientRealIp $geo{
+default 1;
+127.0.0.1/32 0;
+#vdi
+122.53.61.149 0;
+210.5.114.138 0;
+103.44.235.242 0;
+223.119.201.2 0;
+122.55.108.34 0;
+180.232.123.106 0;
+121.96.53.99 0;
+122.53.214.107 0;
+180.232.123.101 0;
+122.53.214.108 0;
+203.177.208.142 0;
+203.177.137.206 0;
+122.55.108.34 0;
+223.119.193.154 0;
+#botpanel
+16.162.45.222 0;
+8.134.54.138 0;
+49.232.246.188 0;
+119.28.130.208 0;
+18.166.226.192 0;
+18.163.182.156 0;
+16.162.47.155 0;
+18.167.12.141 0;
+18.162.168.236 0;
+18.162.54.122 0;
+18.162.149.64 0;
+}''' >$nginx_install_path/nginx/conf/vhost/whiteip.map
+
+service_web_domain=""
+service_webapi_domain=""
+service_websocket_domain=""
+echo '''
+ server {
+        listen       80;
+        server_name  '${service_web_domain}';
+        root         /data/nginx/pubcloud-w;
+        access_log '${nginx_install_path}'/nginx/logs/'${service_web_domain}'_access.log main_json;
+        error_log '${nginx_install_path}'/nginx/logs/'${service_web_domain}'_error.log;
+        set $resp_body "";
+        body_filter_by_lua '
+        local resp_body = string.sub(ngx.arg[1],1,1000)
+        ngx.ctx.buffered=(ngx.ctx.buffered or "")..resp_body
+        if ngx.arg[2]then
+        ngx.var.resp_body = ngx.ctx.buffered
+        end';
+        location / {
+        if ( $geo = 1 ){
+            return 403;
+        }
+        add_header Access-Control-Allow-Orgin '*';
+        index index.html;
+        }
+        error_page 404 /404.html;
+        location = /404.html {
+        }
+
+        error_page 500 502 503 504 /50x.html;
+        location = /50x.html {
+        }
+    }
+''' >$nginx_install_path/nginx/conf/vhost/pubcloudapi.conf
+echo '''
+   server {
+        listen       80;
+        server_name  '${service_webapi_domain}';
+        access_log '${nginx_install_path}'/nginx/logs/'${service_webapi_domain}'_access.log main_json;
+        error_log '${nginx_install_path}'/nginx/logs/'${service_webapi_domain}'_error.log;
+        set $resp_body "";
+        body_filter_by_lua '
+        local resp_body = string.sub(ngx.arg[1],1,1000)
+        ngx.ctx.buffered=(ngx.ctx.buffered or "")..resp_body
+        if ngx.arg[2]then
+        ngx.var.resp_body = ngx.ctx.buffered
+        end
+        ';
+        location / {
+        add_header Access-Control-Allow-Orgin '*';
+        proxy_pass http://127.0.0.1:10000/;
+        }
+        error_page 404 /404.html;
+        location = /404.html {
+        }
+
+        error_page 500 502 503 504 /50x.html;
+        location = /50x.html {
+        }
+    }
+''' >$nginx_install_path/nginx/conf/vhost/pubcloud.conf
+echo '''
+server {
+    listen       80;
+    server_name  '${service_websocket_domain}';
+    access_log '${nginx_install_path}'/nginx/logs/'${service_websocket_domain}'_access.log main_json;
+    error_log '${nginx_install_path}'/nginx/logs/'${service_websocket_domain}'_error.log;
+    set $resp_body "";
+    body_filter_by_lua '
+    local resp_body = string.sub(ngx.arg[1],1,1000)
+    ngx.ctx.buffered=(ngx.ctx.buffered or "")..resp_body
+    if ngx.arg[2]then
+    ngx.var.resp_body = ngx.ctx.buffered
+    end
+    ';
+    location / {
+    add_header Access-Control-Allow-Orgin '*';
+    proxy_pass http://127.0.0.1:10000/;
+    }
+    location /ws/result {
+    add_header Access-Control-Allow-Orgin '*';
+    proxy_http_version 1.1;
+    proxy_set_header Upgrade $http_upgrade;
+    proxy_set_header Connection "upgrade";
+    proxy_pass http://127.0.0.1:10001/;
+    }
+    error_page 404 /404.html;
+    location = /404.html {
+    }
+
+    error_page 500 502 503 504 /50x.html;
+    location = /50x.html {
+    }
+}
+''' >$nginx_install_path/nginx/conf/vhost/pubcloudws.conf
 openresty_install 1.19.3.1
+read -p "请输入mysqlroot的密码" newMysqlPass
+mysql574_install $newMysqlPass

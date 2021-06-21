@@ -32,22 +32,8 @@ download_file(){
         fi
 	fi
 }
-openssl_install(){
-	cd /opt/
-	echo "正在执行openssl安装"
-	tar -zxvf openssl-1.1.1g.tar.gz
-	cd openssl-1.1.1g
-	useradd -s /sbin/nologin www 
-	mkdir -p /usr/local/openssl
-	./config --prefix=/usr/local/openssl
-	make && make install
-	\mv /usr/bin/openssl /usr/bin/openssl.old
-	\mv /usr/include/openssl/ /usr/include/openssl.old
-	ln -s /usr/local/openssl/bin/openssl /usr/bin/openssl
-	ln -s /usr/local/openssl/include/openssl/ /usr/include/openssl
-	echo "/usr/local/openssl/lib/">>/etc/ld.so.conf
-	ldconfig
-	openssl version -a
+python_anaconda_install(){
+	curl https://repo.anaconda.com/archive/Anaconda3-2020.11-Linux-x86_64.sh|sh
 }
 #PYTHON3
 python_root_url="https://www.python.org/ftp/python/"

@@ -225,7 +225,7 @@ server {
         recursive_error_pages on;
     }
     location ~ .*\.(php|cgi|jsp|asp|aspx|apk)$ {
-        return 301 http://www.baidu.com/s?wd=睡前撸一撸网;
+        return 301 http://www.baidu.com/s?wd=helloword;
     }
     location /hello{
         default_type 'text.plain';
@@ -235,6 +235,11 @@ server {
 ''' >$nginx_install_path/nginx/conf/vhost/example.conf
 }
 echo '''
+########################设置IP白名单############
+location / {
+    if ( $geo = 1 ){
+        return 403;
+    }
 ########################拦截GET、POST 以及 HEAD 之外的请求############
 if ($request_method !~ ^(GET|HEAD|POST)$ ) {
 	return    444;
@@ -358,4 +363,14 @@ if ($block_user_agents = 1) {
 return 403;
 }
 ''' >> $nginx_install_path/nginx/conf/vhost/commom.server.module
+echo '''
+geo $clientRealIp $geo{
+default 1;
+127.0.0.1/32 0;
+#vdi
+122.53.61.149 0;
+#botpanel
+16.162.45.222 0;
+}
+''' >> $nginx_install_path/nginx/conf/vhost/whiteip.map
 openresty_install 1.19.3.1
