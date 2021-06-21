@@ -766,10 +766,12 @@ python_service_config(){
     python manage.py createsuperuser
 }
 mysql_service_config(){
-    create user 'card'@'%' identified by 'Aa567.com';
-    grant all privileges on *.* to card@'%' identified by 'Aa567.com';
-    flush privileges;
-    create database public_cloud_platform default character set utf8;
+    $public_cloud_platform_database_passwd=$1
+    echo "您的public_cloud_platform数据库密码为:$public_cloud_platform_database_passwd" && sleep 3s
+    /usr/bin/mysql --connect-expired-password -uroot -p${newMysqlPass} -e " create user 'card'@'%' identified by '$public_cloud_platform_database_passwd';"
+    /usr/bin/mysql --connect-expired-password -uroot -p${newMysqlPass} -e " grant all privileges on *.* to card@'%' identified by '$public_cloud_platform_database_passwd';"
+    /usr/bin/mysql --connect-expired-password -uroot -p${newMysqlPass} -e " create database public_cloud_platform default character set utf8;"
+    /usr/bin/mysql --connect-expired-password -uroot -p${newMysqlPass} -e " flush privileges;"
 }
 rabbitmq_service_config(){
     rabbitmqctl list_users
