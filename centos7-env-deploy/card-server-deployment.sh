@@ -104,6 +104,7 @@ openssl_install(){
 	ldconfig
 	openssl version -a
 }
+
 redis_install(){
     redis_version=$1
 	echo $redis_version
@@ -633,6 +634,32 @@ echo "server {
     }
 }
 " >$nginx_install_path/nginx/conf/vhost/pubcloudws.conf
+echo '''
+BASEPATH='$nginx_install_path'/nginx/logs
+ACCESSPATH='$nginx_install_path'/nginx/logs/access_logs
+ERRORPATH='$nginx_install_path'/nginx/logs/error_logs
+ngxlogs="'$service_webapi_domain'_access.log
+'$service_webapi_domain'_access.log
+'$service_web_domain'_access.log
+"
+for alog in $ngxlogs
+do
+mv $BASEPATH/$alog $ACCESSPATH/$(date -d yesterday +%Y%m%d%H)_$alog;
+touch $BASEPATH/$alog;
+kill -USR1 `cat /var/run/nginx.pid`;
+done
+elogs="'$service_webapi_domain'_error.log
+'$service_webapi_domain'_error.log
+'$service_web_domain'_error.log
+"
+for elog in $elogs
+do
+mv $BASEPATH/$elog $ERRORPATH/$(date -d yesterday +%Y%m%d%H)_$elog;
+touch $BASEPATH/$elog;
+kill -USR1 `cat /var/run/nginx.pid`;
+done
+''' >$nginx_install_path/nginx/bin/nginxcutlog.sh
+}
 erlang_install(){
     erlang_version=$1
 	echo $erlang_version
