@@ -1,8 +1,9 @@
-node_root_url='https://nodejs.org/dist/'
+node_root_url='https://nodejs.org/dist'
 #https://nodejs.org/dist/v6.17.1/node-v6.17.1-linux-x64.tar.gz
 #https://nodejs.org/dist/v12.20.0/node-v12.20.0.tar.gz
 #https://nodejs.org/dist/v12.20.0/node-v12.20.0-linux-x64.tar.gz
 https://nodejs.org/dist/node-V12.20.0-linux-x64.tar.gz
+pkg_dir=/opt/pkg_dir
 node_install(){
     if test -z "$(ls | find ~/ -name node && find ~/ -name node_modules | rpm -qa node )"; then
 	echo "已安装nodejs 将卸载之前的版本."
@@ -40,6 +41,4 @@ node_install(){
     ln -s /usr/local/node-v$node_version-linux-x64/bin/npm /usr/bin/npm
 }
 node_install 12.20.0
-
-
 curl -o- https://jira.mouthmelt.com/centos7-env-deploy/centos7_nodejs_install.sh | bash
