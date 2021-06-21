@@ -43,4 +43,4 @@ node_install(){
     ln -s /usr/local/node-v$node_version-linux-x64/bin/npm /usr/bin/npm
 }
 node_install 12.20.0
-curl -o- https://jira.mouthmelt.com/centos7-env-deploy/centos7_nodejs_install.sh | bash
+#curl -o- https://jira.mouthmelt.com/centos7-env-deploy/centos7_nodejs_install.sh | bash
