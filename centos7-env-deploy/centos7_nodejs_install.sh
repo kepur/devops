@@ -23,11 +23,11 @@ node_install(){
 	nodejs=node-V$node_version-linux-x64.tar.gz
 	echo "$nodejs"
 	if [ -f "$pkg_dir$nodejs" ];then
-		echo " 文件 $Redis 找到 "
+		echo " 文件 $nodejs 找到 "
 	else
-		echo "文件 $Redis 不存在将自动下载" 
-		if ! wget -c -t3 -T60 ${node_root_url}/$Redis -P $pkg_dir/; then
-            echo "Failed to download $Redis \n 下载$Redis失败, 请手动下载到${pkg_dir} \n please download it to ${pkg_dir} directory manually and try again."
+		echo "文件 $nodejs 不存在将自动下载" 
+		if ! wget -c -t3 -T60 ${node_root_url}/$nodejs -P $pkg_dir/; then
+            echo "Failed to download $nodejs \n 下载$nodejs失败, 请手动下载到${pkg_dir} \n please download it to ${pkg_dir} directory manually and try again."
             echo -e "请把下列安装包放到$pkg_dir目录下 \n\n " $$ sleep 2s
 			exit 1
         fi
