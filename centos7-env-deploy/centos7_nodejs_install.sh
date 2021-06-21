@@ -3,7 +3,7 @@ node_root_url='https://nodejs.org/dist/'
 #https://nodejs.org/dist/v12.20.0/node-v12.20.0.tar.gz
 #https://nodejs.org/dist/v12.20.0/node-v12.20.0-linux-x64.tar.gz
 node_install(){
-    if test -z "$(ls | find ~/ -name node | find ~/ -name node_modules | rpm -qa node )"; then
+    if test -z "$(ls | find ~/ -name node && find ~/ -name node_modules | rpm -qa node )"; then
 	echo "已安装nodejs 将卸载之前的版本."
         yum remove nodejs npm -y
         rm -rf /usr/local/lib/node*
@@ -26,7 +26,7 @@ node_install(){
 		echo " 文件 $Redis 找到 "
 	else
 		echo "文件 $Redis 不存在将自动下载" 
-		if ! wget -c -t3 -T60 ${redis_root_url}/$Redis -P $pkg_dir/; then
+		if ! wget -c -t3 -T60 ${node_root_url}/$Redis -P $pkg_dir/; then
             echo "Failed to download $Redis \n 下载$Redis失败, 请手动下载到${pkg_dir} \n please download it to ${pkg_dir} directory manually and try again."
             echo -e "请把下列安装包放到$pkg_dir目录下 \n\n " $$ sleep 2s
 			exit 1
