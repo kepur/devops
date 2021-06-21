@@ -23,14 +23,14 @@ openssl_install(){
 	fi
     cd $pkg_dir && echo "正在执行Openssl安装"
 	tar -zxvf $openssl && cd openssl-$openssl_version
-	mkdir -p /usr/local/openssl-$openssl_version
-	./config --prefix=/usr/local/openssl-$openssl_version
+	mkdir -p /usr/local/openssl
+	./config --prefix=/usr/local/openssl
 	make && make install
 	\mv /usr/bin/openssl /usr/bin/openssl.old
 	\mv /usr/include/openssl /usr/include/openssl.old
-	ln -s /usr/local/openssl-$openssl_version/bin/openssl /usr/bin/openssl
-	ln -s /usr/local/openssl-$openssl_version/include/openssl/ /usr/include/openssl
-	echo "/usr/local/openssl-$openssl_version/lib/">>/etc/ld.so.conf
+	ln -s /usr/local/openssl/bin/openssl /usr/bin/openssl
+	ln -s /usr/local/openssl/include/openssl/ /usr/include/openssl
+	echo "/usr/local/openssl/lib/">>/etc/ld.so.conf
 	ldconfig
 	openssl version -a
 }

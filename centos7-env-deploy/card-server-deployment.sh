@@ -1,37 +1,39 @@
-#手动配置
-workdir=/opt/pkg_dir/
-pkg_dir=/opt/pkg_dir
-openssl_root_url="https://www.openssl.org/source/"
-python_root_url="https://www.python.org/ftp/python/"
-mysql_root_url="https://repo.mysql.com//"
-openresty_root_url="https://openresty.org/download/"
-redis_root_url="https://download.redis.io/releases/"
-erlang_root_url="https://erlang.org/download/"
-rabbitmq_root_url='https://github.com/rabbitmq/rabbitmq-server/releases/download/'
-node_root_url='https://nodejs.org/dist'
-nginx_install_path=/opt
-service_web_domain=""
-service_webapi_domain=""
-service_websocket_domain=""
+local IP=$( ip addr | egrep -o '[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}' | egrep -v "^192\.168|^172\.1[6-9]\.|^172\.2[0-9]\.|^172\.3[0-2]\.|^10\.|^127\.|^255\.|^0\." | head -n 1 )
+[ -z ${IP} ] && IP=$( wget -qO- -t1 -T2 ipv4.icanhazip.com )
+local cname=$( awk -F: '/model name/ {name=$2} END {print name}' /proc/cpuinfo | sed 's/^[ \t]*//;s/[ \t]*$//' )
+local cores=$( awk -F: '/model name/ {core++} END {print core}' /proc/cpuinfo )
+local freq=$( awk -F: '/cpu MHz/ {freq=$2} END {print freq}' /proc/cpuinfo | sed 's/^[ \t]*//;s/[ \t]*$//' )
+local tram=$( free -m | awk '/Mem/ {print $2}' )
+local swap=$( free -m | awk '/Swap/ {print $2}' )
+local up=$( awk '{a=$1/86400;b=($1%86400)/3600;c=($1%3600)/60;d=$1%60} {printf("%ddays, %d:%d:%d\n",a,b,c,d)}' /proc/uptime )
+local load=$( w | head -1 | awk -F'load average:' '{print $2}' | sed 's/^[ \t]*//;s/[ \t]*$//' )
+local arch=$( uname -m )
+local lbit=$( getconf LONG_BIT )
+local host=$( hostname )
+local kern=$( uname -r )
+#软件包安装路径
+local pkg_dir=/opt/pkg_dir
+#下载地址
+local openssl_root_url="https://www.openssl.org/source"
+local python_root_url="https://www.python.org/ftp/python"
+local mysql_root_url="https://repo.mysql.com/"
+local openresty_root_url="https://openresty.org/download"
+local redis_root_url="https://download.redis.io/releases"
+local erlang_root_url="https://erlang.org/download"
+local rabbitmq_root_url='https://github.com/rabbitmq/rabbitmq-server/releases/download'
+local node_root_url='https://nodejs.org/dist'
+#需要配置
+local nginx_install_path=/opt
+local service_web_domain=""
+local service_webapi_domain=""
+local service_websocket_domain=""
+local newMysqlPass=""
 if [ ! -d "/opt/pkg_dir" ];then
   mkdir -p /opt/pkg_dir
   else
   echo "文件夹已经存在"
 fi
 get_os_info(){
-    IP=$( ip addr | egrep -o '[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}' | egrep -v "^192\.168|^172\.1[6-9]\.|^172\.2[0-9]\.|^172\.3[0-2]\.|^10\.|^127\.|^255\.|^0\." | head -n 1 )
-    [ -z ${IP} ] && IP=$( wget -qO- -t1 -T2 ipv4.icanhazip.com )
-    local cname=$( awk -F: '/model name/ {name=$2} END {print name}' /proc/cpuinfo | sed 's/^[ \t]*//;s/[ \t]*$//' )
-    local cores=$( awk -F: '/model name/ {core++} END {print core}' /proc/cpuinfo )
-    local freq=$( awk -F: '/cpu MHz/ {freq=$2} END {print freq}' /proc/cpuinfo | sed 's/^[ \t]*//;s/[ \t]*$//' )
-    local tram=$( free -m | awk '/Mem/ {print $2}' )
-    local swap=$( free -m | awk '/Swap/ {print $2}' )
-    local up=$( awk '{a=$1/86400;b=($1%86400)/3600;c=($1%3600)/60;d=$1%60} {printf("%ddays, %d:%d:%d\n",a,b,c,d)}' /proc/uptime )
-    local load=$( w | head -1 | awk -F'load average:' '{print $2}' | sed 's/^[ \t]*//;s/[ \t]*$//' )
-    local arch=$( uname -m )
-    local lbit=$( getconf LONG_BIT )
-    local host=$( hostname )
-    local kern=$( uname -r )
     echo "########## System Information ##########"
     echo 
     echo "CPU model            : ${cname}"
@@ -58,10 +60,10 @@ change_localtime(){
 	systemctl enable ntpd
 }
 change_ssh_port(){
-	echo "更改ssh默认端口..............."
-	sleep 1s
-	sed -i '/^Port.*/d' /etc/ssh/sshd_config && echo "Port 2631" >> /etc/ssh/sshd_config
-	setenforce 0
+    port=$1
+	echo "更改ssh默认端口..............." && sleep 1s
+    setenforce 0
+	sed -i '/^Port.*/d' /etc/ssh/sshd_config && echo "Port $port" >> /etc/ssh/sshd_config
 	systemctl restart sshd.service
 }
 change_yum_source(){
@@ -75,7 +77,7 @@ yum_init(){
     yum update -y && yum install gcc pcre pcre-devel zlib-devel openssl perl openssl-devel libffi-devel -y
     yum groupinstall "Development tools"  -y 
     yum install unzip zlib-devel bzip2-devel openssl-devel ncurses-devel sqlite-devel readline-devel tk-devel gdbm-devel db4-devel libpcap-devel xz-devel  readline-devel  -y
-    wget http://mirror.centos.org/centos/7/os/x86_64/Packages/libffi-devel-3.0.13-18.el7.x86_64.rpm
+    #wget http://mirror.centos.org/centos/7/os/x86_64/Packages/libffi-devel-3.0.13-18.el7.x86_64.rpm
 }
 openssl_install(){
     openssl_version=$1
@@ -105,7 +107,6 @@ openssl_install(){
 	ldconfig
 	openssl version -a
 }
-
 redis_install(){
     redis_version=$1
 	echo $redis_version
@@ -176,6 +177,7 @@ python_install(){
 	sed -i 's/python/python2/g' /usr/libexec/urlgrabber-ext-down
 }
 mysql_install(){
+    #read -p "请输入mysqlroot的密码" newMysqlPass
     #https://repo.mysql.com//mysql80-community-release-el7-3.noarch.rpm
     #https://repo.mysql.com//mysql57-community-release-el7-8.noarch.rpm
     #mysqlurl="https://jp-1301785062.cos.ap-tokyo.myqcloud.com/mysql57-community-release-el7-8.noarch.rpm"
@@ -274,12 +276,11 @@ openresty_install(){
     fi
     systemctl enable nginx.service
     systemctl start nginx.service
-    systemctl enable ntpd
     systemctl enable nginx
 }
 overwrite_nginx_configfile(){
     worker_processes=`expr $( awk -F: '/model name/ {core++} END {print core}' /proc/cpuinfo ) \* 2` 
-    openfilelimits=$( ulimit -a|grep "open files" | awk {print $3 })
+    openfilelimits=$( ulimit -a|grep "open files" | awk '{print $4 }')
     mv $nginx_install_path/nginx/conf/nginx.conf $nginx_install_path/nginx/conf/nginx.confbak
     case "$cores" in
     2)
@@ -294,6 +295,8 @@ overwrite_nginx_configfile(){
         echo "8核以上CPU"
         cpu_affinity="00000001 00000010 00000100 00001000 00010000 00100000 01000000 10000000"
     ;;
+    esac
+echo "配置nginx配置文件" && sleep 2s
 echo "
 user  www;
 worker_processes  ${worker_processes};
@@ -386,6 +389,7 @@ http {
     }
 }
 " >> $nginx_install_path/nginx/conf/nginx.conf
+echo "配置卡机管理系统nginx基本安全公共模块配置" && sleep 2s
 echo '''
 ########################设置IP白名单############
 location / {
@@ -515,6 +519,7 @@ if (\$block_user_agents = 1) {
 return 403;
 }
 ''' >> $nginx_install_path/nginx/conf/vhost/commom.server.module
+echo "配置卡机管理系统nginx卡机IP访问白名单" && sleep 2s
 echo '''
 geo \$clientRealIp \$geo{
 default 1;
@@ -547,6 +552,7 @@ default 1;
 18.162.54.122 0;
 18.162.149.64 0;
 }''' >$nginx_install_path/nginx/conf/vhost/whiteip.map
+echo "配置卡机管理系统nginx server web配置文件" && sleep 2s
 echo "server {
     listen       80;
     server_name  ${service_web_domain};
@@ -576,6 +582,7 @@ echo "server {
     }
 }
 " >$nginx_install_path/nginx/conf/vhost/pubcloudapi.conf
+echo "配置卡机管理系统nginx webapi server配置文件" && sleep 2s
 echo "server {
     listen       80;
     server_name  ${service_webapi_domain};
@@ -602,6 +609,7 @@ echo "server {
     }
 }
 " >$nginx_install_path/nginx/conf/vhost/pubcloud.conf
+echo "配置卡机管理系统nginx websocket server配置文件" && sleep 2s
 echo "server {
     listen       80;
     server_name  ${service_websocket_domain};
@@ -660,6 +668,7 @@ touch $BASEPATH/$elog;
 kill -USR1 `cat /var/run/nginx.pid`;
 done
 ''' >$nginx_install_path/nginx/bin/nginxcutlog.sh
+    systemctl restart nginx && sleep 5s
 }
 erlang_install(){
     erlang_version=$1
@@ -711,7 +720,6 @@ rabbit_mq_install(){
 	rabbitmq-server -detached
 	rabbitmq-plugins enable rabbitmq_management
 }
-
 node_install(){
     if test -z "$(ls | find ~/ -name node && find ~/ -name node_modules | rpm -qa node )"; then
 	echo "已安装nodejs 将卸载之前的版本."
@@ -748,7 +756,47 @@ node_install(){
     ln -s /usr/local/node-v$node_version-linux-x64/bin/node /usr/bin/node
     ln -s /usr/local/node-v$node_version-linux-x64/bin/npm /usr/bin/npm
 }
-openresty_install 1.19.3.1
-read -p "请输入mysqlroot的密码" newMysqlPass
-mysql574_install $newMysqlPass
-
+python_service_config(){
+    python manage.py makemigrations
+    python manage.py migrate
+    python manage.py createsuperuser
+}
+mysql_service_config(){
+    create user 'card'@'%' identified by 'Aa567.com';
+    grant all privileges on *.* to card@'%' identified by 'Aa567.com';
+    flush privileges;
+    create database public_cloud_platform default character set utf8;
+}
+rabbitmq_service_config(){
+    rabbitmqctl list_users
+    rabbitmqctl add_user admin admin
+    rabbitmqctl set_user_tags admin administrator
+    rabbitmqctl set_permissions -p / admin ".*" ".*" ".*"
+    rabbitmqctl list_permissions
+}
+card_service_install(){
+    get_os_info 
+    change_yum_source 
+    yum_init
+    change_localtime
+    #更改ssh端口 指定2631
+    change_ssh_port 2631
+    #安装openssl 指定1.1.1k版本
+    openssl_install 1.1.1k
+    #安装rabbit mq 指定22.0版本
+    redis_install 6.2.3
+    #安装python 指定3.8.9版本
+    python_install 3.8.9
+    #安装rabbit mq 指定22.0版本
+    erlang_install 22.0
+    #安装rabbit mq 指定3.7.15版本
+    rabbit_mq_install 3.7.15
+    #安装mysql
+    mysql_install $newMysqlPass
+    #安装openresty 指定1.19.3.1版本
+    openresty_install 1.19.3.1
+    #安装nginx后 添加配置文件
+    overwrite_nginx_configfile 
+    node_install 12.20.0
+}
+card_service_install
