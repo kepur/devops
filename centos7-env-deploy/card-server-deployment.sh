@@ -934,7 +934,7 @@ main:
 redis:
   host: '127.0.0.1'
   port: 6379
-  password: 'Aa123.com'
+  password: '$redispasswd'
 
 url:
   sso_url: 'http://sso.dev.bagunai.com'
@@ -954,8 +954,8 @@ rabbitmq:
   broker: 'amqp://admin:admin@localhost:5672/'
   host: '127.0.0.1'
   port: 5672
-  user: 'admin'
-  pass: 'admin'
+  user: '$rabbitmq_username'
+  pass: '$rabbitmq_password'
 
 openstack:
   rcbc-dev:
@@ -1116,7 +1116,7 @@ CHANNEL_LAYERS = {
          # \"BACKEND\": \"channels.layers.InMemoryChannelLayer\",
          'BACKEND': 'channels_redis.core.RedisChannelLayer',
          \"CONFIG\": {
-             \"hosts\": [\"redis://:Aa123.com@127.0.0.1:6379/0\"],
+             \"hosts\": [\"redis://:$redispasswd@127.0.0.1:6379/0\"],
              \"symmetric_encryption_keys\": [SECRET_KEY],
          },
      }
