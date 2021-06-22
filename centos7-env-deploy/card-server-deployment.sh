@@ -1,44 +1,44 @@
 #!/usr/bin/env bash
 PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin:~/bin
 export PATH
-local IP=$( ip addr | egrep -o '[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}' | egrep -v "^192\.168|^172\.1[6-9]\.|^172\.2[0-9]\.|^172\.3[0-2]\.|^10\.|^127\.|^255\.|^0\." | head -n 1 )
+IP=$( ip addr | egrep -o '[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}' | egrep -v "^192\.168|^172\.1[6-9]\.|^172\.2[0-9]\.|^172\.3[0-2]\.|^10\.|^127\.|^255\.|^0\." | head -n 1 )
 [ -z ${IP} ] && IP=$( wget -qO- -t1 -T2 ipv4.icanhazip.com )
-local cname=$( awk -F: '/model name/ {name=$2} END {print name}' /proc/cpuinfo | sed 's/^[ \t]*//;s/[ \t]*$//' )
-local cores=$( awk -F: '/model name/ {core++} END {print core}' /proc/cpuinfo )
-local freq=$( awk -F: '/cpu MHz/ {freq=$2} END {print freq}' /proc/cpuinfo | sed 's/^[ \t]*//;s/[ \t]*$//' )
-local tram=$( free -m | awk '/Mem/ {print $2}' )
-local swap=$( free -m | awk '/Swap/ {print $2}' )
-local up=$( awk '{a=$1/86400;b=($1%86400)/3600;c=($1%3600)/60;d=$1%60} {printf("%ddays, %d:%d:%d\n",a,b,c,d)}' /proc/uptime )
-local load=$( w | head -1 | awk -F'load average:' '{print $2}' | sed 's/^[ \t]*//;s/[ \t]*$//' )
-local arch=$( uname -m )
-local lbit=$( getconf LONG_BIT )
-local host=$( hostname )
-local kern=$( uname -r )
+cname=$( awk -F: '/model name/ {name=$2} END {print name}' /proc/cpuinfo | sed 's/^[ \t]*//;s/[ \t]*$//' )
+cores=$( awk -F: '/model name/ {core++} END {print core}' /proc/cpuinfo )
+freq=$( awk -F: '/cpu MHz/ {freq=$2} END {print freq}' /proc/cpuinfo | sed 's/^[ \t]*//;s/[ \t]*$//' )
+tram=$( free -m | awk '/Mem/ {print $2}' )
+swap=$( free -m | awk '/Swap/ {print $2}' )
+up=$( awk '{a=$1/86400;b=($1%86400)/3600;c=($1%3600)/60;d=$1%60} {printf("%ddays, %d:%d:%d\n",a,b,c,d)}' /proc/uptime )
+load=$( w | head -1 | awk -F'load average:' '{print $2}' | sed 's/^[ \t]*//;s/[ \t]*$//' )
+arch=$( uname -m )
+lbit=$( getconf LONG_BIT )
+host=$( hostname )
+kern=$( uname -r )
 #软件包安装路径
-local pkg_dir=/opt/pkg_dir
+pkg_dir=/opt/pkg_dir
 #下载地址
-local openssl_root_url="https://www.openssl.org/source"
-local python_root_url="https://www.python.org/ftp/python"
-local mysql_root_url="https://repo.mysql.com/"
-local openresty_root_url="https://openresty.org/download"
-local redis_root_url="https://download.redis.io/releases"
-local erlang_root_url="https://erlang.org/download"
-local rabbitmq_root_url='https://github.com/rabbitmq/rabbitmq-server/releases/download'
-local node_root_url='https://nodejs.org/dist'
+openssl_root_url="https://www.openssl.org/source"
+python_root_url="https://www.python.org/ftp/python"
+mysql_root_url="https://repo.mysql.com/"
+openresty_root_url="https://openresty.org/download"
+redis_root_url="https://download.redis.io/releases"
+erlang_root_url="https://erlang.org/download"
+rabbitmq_root_url='https://github.com/rabbitmq/rabbitmq-server/releases/download'
+node_root_url='https://nodejs.org/dist'
 #需要配置
-local nginx_install_path=/opt
-local service_web_domain=""
-local service_webapi_domain=""
-local service_websocket_domain=""
-local newMysqlPass=""
+nginx_install_path=/opt
+service_web_domain=""
+service_webapi_domain=""
+service_websocket_domain=""
+newMysqlPass=""
 #卡机程序默认安装路径
-local workdir=/opt/pubcloudplatform
-local cardplatform_download_url="https://jp-1301785062.cos.ap-tokyo.myqcloud.com"
-local cardplatformfront="cardplatform_front_end"
-local cardplatformback="cardplatform_back_end"
-local redispasswd="Aaredis.com"
-local rabbitmq_username='admin'
-local rabbitmq_password='pWdrAbiTin'
+workdir=/opt/pubcloudplatform
+cardplatform_download_url="https://jp-1301785062.cos.ap-tokyo.myqcloud.com"
+cardplatformfront="cardplatform_front_end"
+cardplatformback="cardplatform_back_end"
+redispasswd="Aaredis.com"
+rabbitmq_username='admin'
+rabbitmq_password='pWdrAbiTin'
 if [ ! -d "/opt/pkg_dir" ];then
   mkdir -p /opt/pkg_dir
   else
@@ -79,7 +79,7 @@ change_localtime(){
 }
 
 change_ssh_port(){
-    port=$1
+    local port=$1
 	echo "更改ssh默认端口..............." && sleep 1s
     setenforce 0
 	sed -i '/^Port.*/d' /etc/ssh/sshd_config && echo "Port $port" >> /etc/ssh/sshd_config
@@ -104,9 +104,9 @@ yum_init(){
 
 
 openssl_install(){
-    openssl_version=$1
+    local openssl_version=$1
     echo $openssl_version
-	openssl=openssl-$openssl_version.tar.gz
+	local openssl=openssl-$openssl_version.tar.gz
 	echo "$openssl"
 	if [ -f "$pkg_dir$openssl" ];then
 		echo " 文件 $openssl 找到 "
@@ -134,9 +134,9 @@ openssl_install(){
 
 
 redis_install(){
-    redis_version=$1
+    local redis_version=$1
 	echo $redis_version
-	Redis=redis-$redis_version.tar.gz
+	local Redis=redis-$redis_version.tar.gz
 	echo "$python"
 	if [ -f "$pkg_dir$Redis" ];then
 		echo " 文件 $Redis 找到 "
@@ -180,9 +180,9 @@ redis_install(){
 
 
 python_install(){
-    python_version=$1
+    local python_version=$1
 	echo $python_version
-	python=Python-$python_version.tar.xz
+	local python=Python-$python_version.tar.xz
 	echo "$python"
 	if [ -f "$pkg_dir$python" ];then
 		echo " 文件 $python 找到 "
@@ -214,8 +214,8 @@ mysql_install(){
     #检查是否安装
     #yum repolist enabled | grep "mysql.*-community.*"
     echo "正在执行mysql安装"
-    mysqlpasswd=$1
-    mysql_version="mysql57"
+    local mysqlpasswd=$1
+    local mysql_version="mysql57"
     #mysql_version="mysql80"
     if [[ $openresty_version =~ "mysql57" ]]
     then
@@ -247,9 +247,9 @@ openresty_install(){
     # https://openresty.org/download/openresty-1.19.3.2.tar.gz
     # https://openresty.org/download/openresty-1.19.3.1.tar.gz
     # https://openresty.org/download/openresty-1.17.8.2.tar.gz
-    openresty_version=$1
+    local openresty_version=$1
     echo $openresty_version
-	openresty=openresty-$openresty_version.tar.gz
+	local openresty=openresty-$openresty_version.tar.gz
 	echo "$openresty"
 	if [ -f "$pkg_dir/$openresty" ];then
 		echo " 文件 $openresty 找到 "
@@ -313,8 +313,8 @@ openresty_install(){
 
 
 overwrite_nginx_configfile(){
-    worker_processes=`expr $( awk -F: '/model name/ {core++} END {print core}' /proc/cpuinfo ) \* 2` 
-    openfilelimits=$( ulimit -a|grep "open files" | awk '{print $4 }')
+    local worker_processes=`expr $( awk -F: '/model name/ {core++} END {print core}' /proc/cpuinfo ) \* 2` 
+    local openfilelimits=$( ulimit -a|grep "open files" | awk '{print $4 }')
     mv $nginx_install_path/nginx/conf/nginx.conf $nginx_install_path/nginx/conf/nginx.confbak
     case "$cores" in
     2)
@@ -710,9 +710,9 @@ done
 
 
 erlang_install(){
-    erlang_version=$1
+    local erlang_version=$1
 	echo $erlang_version
-	Erlang=otp_src_$erlang_version.tar.gz
+	local Erlang=otp_src_$erlang_version.tar.gz
 	echo "$Erlang"
 	if [ -f "$pkg_dir$Erlang" ];then
 		echo " 文件 $Erlang 找到 "
@@ -737,9 +737,9 @@ erlang_install(){
 
 
 rabbit_mq_install(){
-    rabbitmq_version=$1
+    local rabbitmq_version=$1
 	echo $rabbitmq_version
-	rabbitmq=rabbitmq-server-generic-unix-$rabbitmq_version.tar.xz
+	local rabbitmq=rabbitmq-server-generic-unix-$rabbitmq_version.tar.xz
 	echo "$rabbitmq"
 	if [ -f "$pkg_dir$rabbitmq" ];then
 		echo " 文件 $rabbitmq 找到 "
@@ -814,8 +814,8 @@ mysql_service_config(){
 
 #配置rabbitmq
 rabbitmq_service_config(){
-    rabbitmq_user=$1
-    rabbitmq_passwd=$2
+    local rabbitmq_user=$1
+    local rabbitmq_passwd=$2
     rabbitmqctl list_users
     rabbitmqctl add_user $rabbitmq_user $rabbitmq_passwd
     rabbitmqctl set_user_tags $rabbitmq_user administrator
