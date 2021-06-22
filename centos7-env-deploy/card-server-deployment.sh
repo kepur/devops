@@ -1,3 +1,6 @@
+#!/usr/bin/env bash
+PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin:~/bin
+export PATH
 local IP=$( ip addr | egrep -o '[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}' | egrep -v "^192\.168|^172\.1[6-9]\.|^172\.2[0-9]\.|^172\.3[0-2]\.|^10\.|^127\.|^255\.|^0\." | head -n 1 )
 [ -z ${IP} ] && IP=$( wget -qO- -t1 -T2 ipv4.icanhazip.com )
 local cname=$( awk -F: '/model name/ {name=$2} END {print name}' /proc/cpuinfo | sed 's/^[ \t]*//;s/[ \t]*$//' )
@@ -30,8 +33,12 @@ local service_websocket_domain=""
 local newMysqlPass=""
 #卡机程序默认安装路径
 local workdir=/opt/pubcloudplatform
-
-
+local cardplatform_download_url="https://jp-1301785062.cos.ap-tokyo.myqcloud.com"
+local cardplatformfront="cardplatform_front_end"
+local cardplatformback="cardplatform_back_end"
+local redispasswd="Aaredis.com"
+local rabbitmq_username='admin'
+local rabbitmq_password='pWdrAbiTin'
 if [ ! -d "/opt/pkg_dir" ];then
   mkdir -p /opt/pkg_dir
   else
@@ -565,7 +572,7 @@ echo "配置卡机管理系统nginx server web配置文件" && sleep 2s
 echo "server {
     listen       80;
     server_name  ${service_web_domain};
-    root         /data/nginx/pubcloud-w;
+    root         $workdir/$cardplatformfront/dist;
     access_log ${nginx_install_path}/nginx/logs/${service_web_domain}_access.log main_json;
     error_log ${nginx_install_path}/nginx/logs/${service_web_domain}_error.log;
     set \$resp_body \"\";
@@ -769,6 +776,7 @@ node_install(){
     ln -s /usr/local/node-v$node_version-linux-x64/bin/node /usr/bin/node
     ln -s /usr/local/node-v$node_version-linux-x64/bin/npm /usr/bin/npm
 }
+#创建数据库
 mysql_service_config(){
     $public_cloud_platform_database_passwd=$1
     echo "您的public_cloud_platform数据库密码为:$public_cloud_platform_database_passwd" && sleep 3s
@@ -777,41 +785,375 @@ mysql_service_config(){
     /usr/bin/mysql --connect-expired-password -uroot -p${newMysqlPass} -e " create database public_cloud_platform default character set utf8;"
     /usr/bin/mysql --connect-expired-password -uroot -p${newMysqlPass} -e " flush privileges;"
 }
+#配置rabbitmq
 rabbitmq_service_config(){
+    rabbitmq_user=$1
+    rabbitmq_passwd=$2
     rabbitmqctl list_users
-    rabbitmqctl add_user admin pWdrAbiTin
-    rabbitmqctl set_user_tags admin administrator
-    rabbitmqctl set_permissions -p / admin ".*" ".*" ".*"
+    rabbitmqctl add_user $rabbitmq_user $rabbitmq_passwd
+    rabbitmqctl set_user_tags $rabbitmq_user administrator
+    rabbitmqctl set_permissions -p / $rabbitmq_user ".*" ".*" ".*"
     rabbitmqctl list_permissions
 }
-
-
-cardsvr_frontend_config(){
-    
+#redis配置密码
+redis_service_config(){
+    rediswd=$1
+    sed -i "/requirepass.*/a requirepass $rediswd" /etc/redis/6379.conf
 }
-cardsvr_backend_config(){
-    pip install virtualenv
-    python -m pip install --upgrade pip
-    python -m pip install uwsgi 
-    ln -s /usr/local/python3.8.9/bin/uwsgi /usr/local/bin/uwsgi
-    ln -s /usr/local/python3.8.9/bin/virtualenv /usr/local/bin/virtualenv
-    #创建virtualenv虚拟环境 配置地址
-    #/data/software/vue_pubCloud_platform_w/src/utils 
-    mkdir -p /opt/publiccloudplatform/ && cd /opt/publiccloudplatform/
-    virtualenv cardmgtplatform
-    source /opt/cardmgtplatform/bin/activate
-    #获取卡机前端升级包
-    python manage.py makemigrations
-    python manage.py migrate
-    python manage.py createsuperuser
-    #卡机后端程序包需要配置的地方
+#配置卡机前端程序
+cardsvr_frontend_config(){
+	if [ -f "$workdir${cardplatformfront}.zip" ];then
+		echo " 文件 ${cardplatformfront}.zip 找到 "
+	else
+		echo "文件 ${cardplatformfront}.zip 不存在将自动下载" 
+		if ! wget -c -t3 -T60 ${cardplatform_download_url}/${cardplatformfront}.zip -P $workdir/; then
+            echo "Failed to download ${cardplatformfront}.zip \n 下载${cardplatformfront}.zip, 请手动下载到${workdir} \n please download it to ${pkg_dir} directory manually and try again."
+            echo -e "请把下列安装包放到$workdir目录下 \n\n " $$ sleep 2s
+			exit 1
+        fi
+	fi
+    cd $workdir && unzip $workdir${cardplatformfront}.zip    
+    #替换
+    mv $workdir/cardplatform-frond-end/src/utils/request.js $workdir/cardplatform-frond-end/src/utils/request.jsbak
+    #sed -i "/^baseURL.*/d" $workdir/cardplatform-frond-end/src/utils/request.js && echo "baseURL: 'https://cardapi.zfgs168.com',">> 
+echo "
+import axios from 'axios';
+import store from '../store';
+import { getToken } from '@/utils/auth'
+const websocket_base_url  = 'wss://${service_websocket_domain}'
+const service = axios.create({
+    // process.env.NODE_ENV === 'development' 来判断是否开发环境
+    adapter: require('axios/lib/adapters/xhr'),
+    baseURL: 'https://${service_webapi_domain}',
+    timeout: 150000
+});
+export {
+    websocket_base_url
+}
 
-    #rabbitmq 配置 /main/config.yml
-    #redis和mysql 配置 main/setting.py
-    #uwsgi配置     .uwsgi.ini
-    #计划任务配置 ./celery start
-    uwsgi --ini uwsgi.ini
-    ./celery start
+service.interceptors.request.use(
+    config => {
+        if (store.getters.token) {
+            config.headers['Authorization'] = 'Token ' + getToken() // 让每个请求携带自定义token 请根据实际情况自行修改
+        }
+        return config
+    },
+    error => {
+        // Do something with request error
+        console.log(error) // for debug
+        Promise.reject(error)
+    }
+)
+
+// response 拦截器
+service.interceptors.response.use(
+    response => {
+        /**
+         * code为非20000是抛错 可结合自己业务进行修改
+         */
+        return response.data
+    },
+    error => {
+        console.log('err' + error) // for debug
+        return Promise.reject(error)
+    }
+)
+export default service
+" > $workdir/$cardplatformfront/src/utils/request.js
+  cd $workdir/$cardplatformfront && npm install  
+  npm run build
+}
+#配置卡机后端程序
+cardsvr_backend_config(){
+	if [ -f "$workdir${cardplatformback}.zip" ];then
+		echo " 文件 ${cardplatformback}.zip 找到 "
+	else
+		echo "文件 ${cardplatformback}.zip 不存在将自动下载" 
+		if ! wget -c -t3 -T60 ${cardplatform_download_url}/${cardplatformback}.zip -P $workdir/; then
+            echo "Failed to download ${cardplatformback}.zip \n 下载${cardplatformback}.zip, 请手动下载到${workdir} \n please download it to ${pkg_dir} directory manually and try again."
+            echo -e "请把下列安装包放到$workdir目录下 \n\n " $$ sleep 2s
+			exit 1
+        fi
+	fi
+pip install virtualenv
+python -m pip install --upgrade pip
+python -m pip install uwsgi 
+ln -s /usr/local/python3.8.9/bin/uwsgi /usr/local/bin/uwsgi
+ln -s /usr/local/python3.8.9/bin/virtualenv /usr/local/bin/virtualenv
+#创建virtualenv虚拟环境 配置地址
+#/data/software/vue_pubCloud_platform_w/src/utils 
+#mkdir -p /opt/publiccloudplatform/ && cd /opt/publiccloudplatform/
+#卡机后端程序包需要配置的地方
+#rabbitmq 配置 /main/config.yml
+#redis和mysql 配置 main/setting.py
+#webscoket服务配置  websocket.service
+#计划任务配置 ./celery start
+#获取卡机前端升级包
+#uwsgi配置     .uwsgi.ini
+mv $workdir/$cardplatformback/uwsgi.ini $workdir/$cardplatformback/uwsgi.bak
+echo "
+[uwsgi]
+chdir=$workdir/$cardplatformback
+pythonpath=$workdir/cardmgtplatform/lib/python3.8/site-packages
+module=main.wsgi
+master=True
+pidfile=/tmp/pubcloud.pid
+vacuum=True
+max-requests=4000
+daemonize=./pubcloud.log
+http=:10000
+processes=4
+">${cardplatform_download_url}/${cardplatformback}/uwsgi.ini
+echo "
+[Unit]
+Description=public cloud platform websocket service
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=$workdir/$cardplatformback
+Environment=DJANGO_SETTINGS_MODULE=main.settings
+ExecStart=$workdir/cardmgtplatform/bin/daphne --access-log $workdir/$cardplatformback/websocket-access.log -b 0.0.0.0 -p 10001 main.asgi:application
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
+">/usr/lib/systemd/system/websocket.service
+systemctl start websocket
+#rabbitmq 配置 /main/config.yml
+mv $workdir/$cardplatformback/main/config.yml $workdir/$cardplatformback/main/config.ymlbak
+echo "
+main:
+  env: 'DEMO'
+  debug: True
+  #log_type: 'file'
+  log_type: 'print'
+  log_path: 'logs/'
+
+
+redis:
+  host: '127.0.0.1'
+  port: 6379
+  password: 'Aa123.com'
+
+url:
+  sso_url: 'http://sso.dev.bagunai.com'
+  sso_token: '437221b42ce7b8b9d25cc6cd04683e5e097cfd7012b7336929c22c6a377ffbf6'
+  sso_user_data: '/api/v1/common/userAccount/get_user_data/'
+  logout_location: '/identity/login.html'
+
+  cmdb_sso_url: 'http://cmdb.dev.bagunai.com'
+  
+  cmdb_url: 'http://cmdb.dev.bagunai.com'
+  cmdb_token: '437221b42ce7b8b9d25cc6cd04683e5e097cfd7012b7336929c22c6a377ffbf6'
+
+  feitian_url: 'http://feitian.dev.bagunai.com'
+  serverapply_url: '/feitian/cloudServerBuy/createApply'
+
+rabbitmq:
+  broker: 'amqp://admin:admin@localhost:5672/'
+  host: '127.0.0.1'
+  port: 5672
+  user: 'admin'
+  pass: 'admin'
+
+openstack:
+  rcbc-dev:
+    host: 'http://clouddev.bssrv.com'
+    admin:
+      user: 'cmdbdevadmin'
+      password: 'cmdbdevadmin'
+      id: '06ad01220fe047c7940cc651936c9651'
+    user:
+      user: 'cmdbdevuser'
+      password: 'cmdbdevuser'
+      id: '06ad01220fe047c7940cc651936c9651'
+    project: 'A02'
+    key: NULL
+    exclude_project: ['admin', 'service', 'tempest']
+    ip_range_min: 10
+    ip_range_max: 240
+"> $workdir/$cardplatformback/main/config.yml
+#添加redis和mysql配置到python设置档
+mv $workdir/$cardplatformback/main/setting.py $workdir/$cardplatformback/main/setting.pybak
+echo "
+from pathlib import Path
+import sys
+import os
+import yaml
+from libs import tool
+import base64
+
+# Build paths inside the project like this: BASE_DIR / 'subdir'.
+BASE_DIR = Path(__file__).resolve().parent.parent
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, os.path.join(BASE_DIR, 'apps'))
+
+# SECURITY WARNING: keep the secret key used in production secret!
+SECRET_KEY = 'in+mic1^%69=k43_7#@(woj=#rdjhserznw4py%0ssssss'
+# SECURITY WARNING: don't run with debug turned on in production!
+DEBUG = True
+ALLOWED_HOSTS = ['*']
+# Application definition
+
+INSTALLED_APPS = [
+    'django.contrib.admin',
+    'django.contrib.auth',
+    'django.contrib.contenttypes',
+    'django.contrib.sessions',
+    'django.contrib.messages',
+    'django.contrib.staticfiles',
+    'corsheaders',
+    'rest_framework',
+    'rest_framework.authtoken',
+    'django_filters',
+    'guardian',
+    'channels',
+    'drf_yasg',
+    'apps.permcontrol',
+    'apps.audit',
+    'apps.aws',
+    'apps.gcp',
+    'apps.alicloud',
+    'apps.tencent',
+    'apps.account',
+    'apps.url_permission',
+    'apps.public_api',
+]
+
+MIDDLEWARE = [
+    'django.middleware.security.SecurityMiddleware',
+    'django.contrib.sessions.middleware.SessionMiddleware',
+    'django.middleware.common.CommonMiddleware',
+    # 'django.middleware.csrf.CsrfViewMiddleware',
+    'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'django.contrib.messages.middleware.MessageMiddleware',
+    'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
+    'django.middleware.common.CommonMiddleware',
+]
+
+ROOT_URLCONF = 'main.urls'
+CORS_ORIGIN_ALLOW_ALL = True
+CORS_ALLOW_CREDENTIALS = True
+TEMPLATES = [
+    {
+        'BACKEND': 'django.template.backends.django.DjangoTemplates',
+        'DIRS': [os.path.join(BASE_DIR, 'templates')]
+        ,
+        'APP_DIRS': True,
+        'OPTIONS': {
+            'context_processors': [
+                'django.template.context_processors.debug',
+                'django.template.context_processors.request',
+                'django.contrib.auth.context_processors.auth',
+                'django.contrib.messages.context_processors.messages',
+            ],
+        },
+    },
+]
+
+WSGI_APPLICATION = 'main.wsgi.application'
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'public_cloud_platform',
+        'USER': 'card',
+        'PASSWORD': '$newMysqlPass',
+        'HOST': '127.0.0.1',
+        'PORT': '3306',
+        'OPTIONS': {
+            # 'init_command': \"SET sql_mode='STRICT_TRANS_TABLES'\",
+            \"init_command\": \"SET foreign_key_checks = 0;\",
+        },
+    }
+}
+
+AUTH_PASSWORD_VALIDATORS = [
+    {
+        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
+    },
+    {
+        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+    },
+    {
+        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
+    },
+    {
+        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
+    },
+]
+LANGUAGE_CODE = 'zh-hans'
+# TIME_ZONE = 'UTC'
+TIME_ZONE = 'Asia/Shanghai'
+USE_I18N = True
+USE_L10N = True
+USE_TZ = True
+STATIC_URL = '/static/'
+STATIC_ROOT = os.path.join(BASE_DIR, \"static/\")
+
+REST_FRAMEWORK = {
+    'DEFAULT_FILTER_BACKENDS': (
+        'django_filters.rest_framework.DjangoFilterBackend',
+    ),
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework.authentication.BasicAuthentication',
+        'rest_framework.authentication.SessionAuthentication',
+        'rest_framework.authentication.TokenAuthentication',
+
+    ),
+    'DEFAULT_SCHEMA_CLASS': 'rest_framework.schemas.coreapi.AutoSchema',
+}
+
+AUTHENTICATION_BACKENDS = (
+    'django.contrib.auth.backends.ModelBackend',
+    'guardian.backends.ObjectPermissionBackend',
+)
+
+ASGI_APPLICATION = \"main.routing.application\"
+CHANNEL_LAYERS = {
+     \"default\": {
+         # \"BACKEND\": \"channels.layers.InMemoryChannelLayer\",
+         'BACKEND': 'channels_redis.core.RedisChannelLayer',
+         \"CONFIG\": {
+             \"hosts\": [\"redis://:Aa123.com@127.0.0.1:6379/0\"],
+             \"symmetric_encryption_keys\": [SECRET_KEY],
+         },
+     }
+}
+# celery时区设置
+CELERY_TIMEZONE = 'Asia/Shanghai'
+CELERY_ENABLE_UTC = False
+conf_path = 'main/config.yml'
+audit_path = 'main/audit.yml'
+
+with open(conf_path, encoding='UTF-8') as f:
+    conf = yaml.full_load(f.read())
+
+CURRENT_ENV = conf['main']['env']
+DEBUG = conf['main']['debug']
+ALLOWED_HOSTS = ['*']
+CMDB_URL = conf['url']['cmdb_url']
+CMDB_TOKEN = conf['url']['cmdb_token']
+LOG_TYPE = conf['main']['log_type']
+LOG_PATH = conf['main']['log_path']
+log = tool.Log()
+log.PATH = LOG_PATH
+if LOG_TYPE == 'file':
+    logger = log.file_logger()
+else:
+    logger = log.stream_logger()
+
+">$workdir/$cardplatformback/main/setting.py
+cd $workdir && virtualenv cardmgtplatform
+source $workdir/cardmgtplatform/bin/activate
+cd $workdir/$cardplatformback && pip install -r requirement.txt
+python manage.py makemigrations
+python manage.py migrate
+echo "输入用户名 邮箱 密码 " && sleep 3s
+python manage.py createsuperuser 
+uwsgi --ini uwsgi.ini
+./celery start
 }
 card_service_install(){
     get_os_info 
@@ -837,5 +1179,6 @@ card_service_install(){
     #安装nginx后 添加配置文件
     overwrite_nginx_configfile 
     node_install 12.20.0
+
 }
 card_service_install
