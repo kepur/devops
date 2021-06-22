@@ -28,10 +28,19 @@ local service_web_domain=""
 local service_webapi_domain=""
 local service_websocket_domain=""
 local newMysqlPass=""
+#卡机程序默认安装路径
+local workdir=/opt/pubcloudplatform
+
+
 if [ ! -d "/opt/pkg_dir" ];then
   mkdir -p /opt/pkg_dir
   else
-  echo "文件夹已经存在"
+  echo "程序包下载文件夹已经存在"
+fi
+if [ ! -d "/opt/pubcloudplatform" ];then
+  mkdir -p /opt/pubcloudplatform
+  else
+  echo "卡机工作目录已经存在"
 fi
 get_os_info(){
     echo "########## System Information ##########"
@@ -760,11 +769,6 @@ node_install(){
     ln -s /usr/local/node-v$node_version-linux-x64/bin/node /usr/bin/node
     ln -s /usr/local/node-v$node_version-linux-x64/bin/npm /usr/bin/npm
 }
-python_service_config(){
-    python manage.py makemigrations
-    python manage.py migrate
-    python manage.py createsuperuser
-}
 mysql_service_config(){
     $public_cloud_platform_database_passwd=$1
     echo "您的public_cloud_platform数据库密码为:$public_cloud_platform_database_passwd" && sleep 3s
@@ -775,10 +779,39 @@ mysql_service_config(){
 }
 rabbitmq_service_config(){
     rabbitmqctl list_users
-    rabbitmqctl add_user admin admin
+    rabbitmqctl add_user admin pWdrAbiTin
     rabbitmqctl set_user_tags admin administrator
     rabbitmqctl set_permissions -p / admin ".*" ".*" ".*"
     rabbitmqctl list_permissions
+}
+
+
+cardsvr_frontend_config(){
+    
+}
+cardsvr_backend_config(){
+    pip install virtualenv
+    python -m pip install --upgrade pip
+    python -m pip install uwsgi 
+    ln -s /usr/local/python3.8.9/bin/uwsgi /usr/local/bin/uwsgi
+    ln -s /usr/local/python3.8.9/bin/virtualenv /usr/local/bin/virtualenv
+    #创建virtualenv虚拟环境 配置地址
+    #/data/software/vue_pubCloud_platform_w/src/utils 
+    mkdir -p /opt/publiccloudplatform/ && cd /opt/publiccloudplatform/
+    virtualenv cardmgtplatform
+    source /opt/cardmgtplatform/bin/activate
+    #获取卡机前端升级包
+    python manage.py makemigrations
+    python manage.py migrate
+    python manage.py createsuperuser
+    #卡机后端程序包需要配置的地方
+
+    #rabbitmq 配置 /main/config.yml
+    #redis和mysql 配置 main/setting.py
+    #uwsgi配置     .uwsgi.ini
+    #计划任务配置 ./celery start
+    uwsgi --ini uwsgi.ini
+    ./celery start
 }
 card_service_install(){
     get_os_info 
