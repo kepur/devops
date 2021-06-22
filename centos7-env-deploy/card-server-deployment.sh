@@ -49,6 +49,7 @@ if [ ! -d "/opt/pubcloudplatform" ];then
   else
   echo "卡机工作目录已经存在"
 fi
+
 get_os_info(){
     echo "########## System Information ##########"
     echo 
@@ -67,6 +68,7 @@ get_os_info(){
     echo 
     echo "########################################"
 }
+
 change_localtime(){
 	echo "安装ntp服务并校验时间..............."
 	timedatectl set-timezone Asia/Shanghai
@@ -75,6 +77,7 @@ change_localtime(){
 	systemctl enable ntpd
 	systemctl enable ntpd
 }
+
 change_ssh_port(){
     port=$1
 	echo "更改ssh默认端口..............." && sleep 1s
@@ -82,6 +85,7 @@ change_ssh_port(){
 	sed -i '/^Port.*/d' /etc/ssh/sshd_config && echo "Port $port" >> /etc/ssh/sshd_config
 	systemctl restart sshd.service
 }
+
 change_yum_source(){
     wget http://mirrors.aliyun.com/repo/Centos-7.repo
     mv /etc/yum.repos.d/CentOs-Base.repo /etc/yum.repos.d/CentOs-Base.repo.bak
@@ -89,12 +93,16 @@ change_yum_source(){
     yum clean all
     yum makecache
 }
+
+
 yum_init(){
     yum update -y && yum install gcc pcre pcre-devel zlib-devel openssl perl openssl-devel libffi-devel -y
     yum groupinstall "Development tools"  -y 
     yum install unzip zlib-devel bzip2-devel openssl-devel ncurses-devel sqlite-devel readline-devel tk-devel gdbm-devel db4-devel libpcap-devel xz-devel  readline-devel  -y
     #wget http://mirror.centos.org/centos/7/os/x86_64/Packages/libffi-devel-3.0.13-18.el7.x86_64.rpm
 }
+
+
 openssl_install(){
     openssl_version=$1
     echo $openssl_version
@@ -123,6 +131,8 @@ openssl_install(){
 	ldconfig
 	openssl version -a
 }
+
+
 redis_install(){
     redis_version=$1
 	echo $redis_version
@@ -167,6 +177,8 @@ redis_install(){
 	systemctl enable redis.service
 	systemctl restart redis.service
 }
+
+
 python_install(){
     python_version=$1
 	echo $python_version
@@ -192,6 +204,8 @@ python_install(){
 	sed -i 's/python/python2/g' /usr/bin/yum
 	sed -i 's/python/python2/g' /usr/libexec/urlgrabber-ext-down
 }
+
+
 mysql_install(){
     #read -p "请输入mysqlroot的密码" newMysqlPass
     #https://repo.mysql.com//mysql80-community-release-el7-3.noarch.rpm
@@ -227,6 +241,8 @@ mysql_install(){
 	/usr/bin/mysql --connect-expired-password -uroot -p${oldpass} -e "ALTER USER 'root'@'localhost' IDENTIFIED BY '"${mysqlpasswd}"';"
 	/usr/bin/mysql --connect-expired-password -uroot -p${oldpass} -e " flush privileges;"
 }
+
+
 openresty_install(){
     # https://openresty.org/download/openresty-1.19.3.2.tar.gz
     # https://openresty.org/download/openresty-1.19.3.1.tar.gz
@@ -294,6 +310,8 @@ openresty_install(){
     systemctl start nginx.service
     systemctl enable nginx
 }
+
+
 overwrite_nginx_configfile(){
     worker_processes=`expr $( awk -F: '/model name/ {core++} END {print core}' /proc/cpuinfo ) \* 2` 
     openfilelimits=$( ulimit -a|grep "open files" | awk '{print $4 }')
@@ -690,6 +708,7 @@ done
     systemctl restart nginx && sleep 5s
 }
 
+
 erlang_install(){
     erlang_version=$1
 	echo $erlang_version
@@ -715,6 +734,8 @@ erlang_install(){
 	source /etc/profile
 	ln -s /usr/local/erlang/bin/erl /usr/bin/erl
 }
+
+
 rabbit_mq_install(){
     rabbitmq_version=$1
 	echo $rabbitmq_version
@@ -740,6 +761,8 @@ rabbit_mq_install(){
 	rabbitmq-server -detached
 	rabbitmq-plugins enable rabbitmq_management
 }
+
+
 node_install(){
     if test -z "$(ls | find ~/ -name node && find ~/ -name node_modules | rpm -qa node )"; then
 	echo "已安装nodejs 将卸载之前的版本."
@@ -776,6 +799,8 @@ node_install(){
     ln -s /usr/local/node-v$node_version-linux-x64/bin/node /usr/bin/node
     ln -s /usr/local/node-v$node_version-linux-x64/bin/npm /usr/bin/npm
 }
+
+
 #创建数据库
 mysql_service_config(){
     $public_cloud_platform_database_passwd=$1
@@ -785,6 +810,8 @@ mysql_service_config(){
     /usr/bin/mysql --connect-expired-password -uroot -p${newMysqlPass} -e " create database public_cloud_platform default character set utf8;"
     /usr/bin/mysql --connect-expired-password -uroot -p${newMysqlPass} -e " flush privileges;"
 }
+
+
 #配置rabbitmq
 rabbitmq_service_config(){
     rabbitmq_user=$1
@@ -795,11 +822,15 @@ rabbitmq_service_config(){
     rabbitmqctl set_permissions -p / $rabbitmq_user ".*" ".*" ".*"
     rabbitmqctl list_permissions
 }
+
+
 #redis配置密码
 redis_service_config(){
     rediswd=$1
     sed -i "/requirepass.*/a requirepass $rediswd" /etc/redis/6379.conf
 }
+
+
 #配置卡机前端程序
 cardsvr_frontend_config(){
 	if [ -f "$workdir${cardplatformfront}.zip" ];then
@@ -812,10 +843,10 @@ cardsvr_frontend_config(){
 			exit 1
         fi
 	fi
-    cd $workdir && unzip $workdir${cardplatformfront}.zip    
-    #替换
-    mv $workdir/cardplatform-frond-end/src/utils/request.js $workdir/cardplatform-frond-end/src/utils/request.jsbak
-    #sed -i "/^baseURL.*/d" $workdir/cardplatform-frond-end/src/utils/request.js && echo "baseURL: 'https://cardapi.zfgs168.com',">> 
+cd $workdir && unzip $workdir${cardplatformfront}.zip    
+#替换
+mv $workdir/cardplatform-frond-end/src/utils/request.js $workdir/cardplatform-frond-end/src/utils/request.jsbak
+#sed -i "/^baseURL.*/d" $workdir/cardplatform-frond-end/src/utils/request.js && echo "baseURL: 'https://cardapi.zfgs168.com',">> 
 echo "
 import axios from 'axios';
 import store from '../store';
@@ -1155,6 +1186,8 @@ python manage.py createsuperuser
 uwsgi --ini uwsgi.ini
 ./celery start
 }
+
+
 card_service_install(){
     get_os_info 
     change_yum_source 
@@ -1178,7 +1211,17 @@ card_service_install(){
     openresty_install 1.19.3.1
     #安装nginx后 添加配置文件
     overwrite_nginx_configfile 
+    #安装node npm
     node_install 12.20.0
-
+    #创建数据库
+    mysql_service_config
+    #rabbitmq创建用户
+    rabbitmq_service_config $rabbitmq_username  $rabbitmq_password
+    #redis设置密码
+    redis_service_config $redispasswd
+    #卡机前端程序下载安装
+    cardsvr_frontend_config
+    #卡机后端程序下载安装
+    cardsvr_backend_config
 }
 card_service_install
