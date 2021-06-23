@@ -37,6 +37,7 @@ cardplatform_download_url="https://jp-1301785062.cos.ap-tokyo.myqcloud.com"
 cardplatformfront="cardplatform_front_end"
 cardplatformback="cardplatform_back_end"
 redispasswd="Aaredis.com"
+pubcloud_platform_db_passwd="Aa123..com"
 rabbitmq_username='admin'
 rabbitmq_password='pWdrAbiTin'
 if [ ! -d "/opt/pkg_dir" ];then
@@ -624,7 +625,7 @@ echo "server {
     location = /50x.html {
     }
 }
-" >$nginx_install_path/nginx/conf/vhost/pubcloudapi.conf
+" >$nginx_install_path/nginx/conf/vhost/pubcloud.conf
 echo "配置卡机管理系统nginx webapi server配置文件" && sleep 2s
 echo "server {
     listen       80;
@@ -652,7 +653,7 @@ echo "server {
     location = /50x.html {
     }
 }
-" >$nginx_install_path/nginx/conf/vhost/pubcloud.conf
+" >$nginx_install_path/nginx/conf/vhost/pubcloudapi.conf
 echo "配置卡机管理系统nginx websocket server配置文件" && sleep 2s
 echo "server {
     listen       80;
@@ -876,7 +877,7 @@ const websocket_base_url  = 'wss://${service_websocket_domain}'
 const service = axios.create({
     // process.env.NODE_ENV === 'development' 来判断是否开发环境
     adapter: require('axios/lib/adapters/xhr'),
-    baseURL: 'https://${service_webapi_domain}',
+    baseURL: 'http://${service_webapi_domain}',
     timeout: 150000
 });
 export {
@@ -924,7 +925,8 @@ remove_backend_service(){
     rm -f /usr/lib/systemd/system/websocket.service
     rm -f /usr/local/bin/uwsgi
     rm -f /usr/local/bin/virtualenv
-    rm -rf $workdir${cardplatformback}
+    rm -rf $workdir/${cardplatformback}.zip
+    rm -rf $workdir/${cardplatformback}
     pip uninstall uwsgi -y
     pip uninstall virtualenv -y
 }
@@ -942,7 +944,7 @@ cardsvr_backend_config(){
 	fi
 
 cd $workdir && unzip $workdir/${cardplatformback}.zip
-cd $workdir${cardplatformback}
+cd $workdir/${cardplatformback}
 pip install virtualenv
 python -m pip install --upgrade pip
 #自定义安装openssl 需要卸载默认yum安装的openssl-devel
@@ -974,7 +976,7 @@ max-requests=4000
 daemonize=./pubcloud.log
 http=:10000
 processes=4
-">${cardplatform_download_url}/${cardplatformback}/uwsgi.ini
+">$workdir/$cardplatformback/${cardplatformback}/uwsgi.ini
 echo "写入websocket配置文件到/usr/lib/systemd/system/websocket.service" && sleep 2s
 echo "[Unit]
 Description=public cloud platform websocket service
@@ -1046,7 +1048,7 @@ openstack:
     ip_range_max: 240
 "> $workdir/$cardplatformback/main/config.yml
 echo "#添加redis和mysql配置到python设置档到 $workdir/$cardplatformback/main/setting.py" && sleep 2s
-mv $workdir/$cardplatformback/main/setting.py $workdir/$cardplatformback/main/setting.pybak
+mv $workdir/$cardplatformback/main/settings.py $workdir/$cardplatformback/main/settings.pybak
 echo "from pathlib import Path
 import sys
 import os
@@ -1129,7 +1131,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'public_cloud_platform',
         'USER': 'card',
-        'PASSWORD': '$newMysqlPass',
+        'PASSWORD': '$pubcloud_platform_db_passwd',
         'HOST': '127.0.0.1',
         'PORT': '3306',
         'OPTIONS': {
@@ -1214,7 +1216,7 @@ if LOG_TYPE == 'file':
 else:
     logger = log.stream_logger()
 
-">$workdir/$cardplatformback/main/setting.py
+">$workdir/$cardplatformback/main/settings.py
 echo "创建python虚拟环境" && sleep 2s
 cd $workdir && virtualenv cardmgtplatform
 echo "进入python虚拟环境并导入环境变量" && sleep 2s
@@ -1228,7 +1230,7 @@ echo "下面将创建系统用户 " && sleep 3s
 python manage.py createsuperuser
 uwsgi --ini uwsgi.ini
 echo "启动计划任务" && sleep 2s
-./celery start
+./celery.sh start
 }
 
 card_service_install(){
