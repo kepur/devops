@@ -26,7 +26,7 @@ erlang_root_url="https://erlang.org/download"
 rabbitmq_root_url='https://github.com/rabbitmq/rabbitmq-server/releases/download'
 node_root_url='https://nodejs.org/dist'
 #需要配置
-nginx_install_path=/opt
+nginx_install_path="/opt"
 service_web_domain=""
 service_webapi_domain=""
 service_websocket_domain=""
@@ -240,7 +240,9 @@ mysql_install(){
 	fi
     cd $pkg_dir && rpm -ivh $mysql
 	yum -y install mysql-server mysql-devel
-	service mysqld restart
+    #如缺少插件
+    #rpm -ivh https://repo.almalinux.org/almalinux/8.3-beta/BaseOS/x86_64/os/Packages/numactl-libs-2.0.12-11.el8.x86_64.rpm
+	systemctl restart mysqld
 	systemctl enable mysqld.services	
 	oldpass=`grep pass /var/log/mysqld.log | awk '{print $NF}'`
 	/usr/bin/mysql --connect-expired-password -uroot -p${oldpass} -e "ALTER USER 'root'@'localhost' IDENTIFIED BY '"${mysqlpasswd}"';"
@@ -249,6 +251,7 @@ mysql_install(){
 
 
 openresty_install(){
+    useradd -s /sbin/nologin www 
     # https://openresty.org/download/openresty-1.19.3.2.tar.gz
     # https://openresty.org/download/openresty-1.19.3.1.tar.gz
     # https://openresty.org/download/openresty-1.17.8.2.tar.gz
@@ -285,35 +288,35 @@ openresty_install(){
     else
         echo "非1.17版本" && sleep 2s
     fi
-    ./configure --user=www --group=www  --with-luajit --without-lua_resty_dns --without-lua_resty_websocket --without-http_redis2_module --with-http_postgres_module --with-http_stub_status_module --with-http_ssl_module --with-http_gzip_static_module --with-openssl=/usr/local/openssl --prefix=$nginx_install_path
+    ./configure --user=www --group=www  --with-luajit --without-lua_resty_dns --without-lua_resty_websocket --without-http_redis2_module  --with-http_stub_status_module --with-http_ssl_module --with-http_gzip_static_module --with-openssl=/usr/local/openssl --prefix=$nginx_install_path
     cd 
     gmake && gmake install
-    echo '''
-    [Unit]
-    Description=nginx
-    After=network.target
-    [Service]
-    Type=forking
-    ExecStart='${nginx_install_path}'/nginx/sbin/nginx
-    ExecReload='${nginx_install_path}'/nginx/sbin/nginx reload
-    ExecStop='${nginx_install_path}'/nginx/sbin/nginx quit
-    PrivateTmp=true
-    [Install]
-    WantedBy=multi-user.target
-    ''' >> /lib/systemd/system/nginx.service
+echo '''
+[Unit]
+Description=nginx
+After=network.target
+[Service]
+Type=forking
+ExecStart='${nginx_install_path}'/nginx/sbin/nginx
+ExecReload='${nginx_install_path}'/nginx/sbin/nginx reload
+ExecStop='${nginx_install_path}'/nginx/sbin/nginx quit
+PrivateTmp=true
+[Install]
+WantedBy=multi-user.target
+''' > /lib/systemd/system/nginx.service
+    systemctl daemon-reload
     if [ ! -d "${nginx_install_path}/nginx/cache/proxy_cache" ];then
-        mkdir -p /opt/pkg_dir
+        mkdir -p ${nginx_install_path}/nginx/cache/proxy_cache
     else
         echo "文件夹${nginx_install_path}/nginx/cache/proxy_cache 已经存在"
     fi
-    if [ ! -d "${nginx_install_path}/nginx/vhost" ];then
-        mkdir -p ${nginx_install_path}/nginx/vhost
+    if [ ! -d "${nginx_install_path}/nginx/conf/vhost" ];then
+        mkdir -p ${nginx_install_path}/nginx/conf/vhost
     else
         echo "文件夹${nginx_install_path}/nginx/vhost已经存在"
     fi
     systemctl enable nginx.service
-    systemctl start nginx.service
-    systemctl enable nginx
+    systemctl start nginx
 }
 
 
@@ -427,140 +430,140 @@ http {
         return 301 https://www.baidu.com/s?wd=wtf;
     }
 }
-" >> $nginx_install_path/nginx/conf/nginx.conf
+" > $nginx_install_path/nginx/conf/nginx.conf
 echo "配置卡机管理系统nginx基本安全公共模块配置" && sleep 2s
 echo '''
 ########################设置IP白名单############
 location / {
-    if ( \$geo = 1 ){
+    if ( $geo = 1 ){
         return 403;
     }
 ########################拦截GET、POST 以及 HEAD 之外的请求############
-if (\$request_method !~ ^(GET|HEAD|POST)\$ ) {
+if ($request_method !~ ^(GET|HEAD|POST)$ ) {
 	return    444;
 }
 ########################拦截GET、POST 以及 HEAD 之外的请求############
 
-#location ~ .*\.(php|cgi|jsp|asp|aspx)\$ {
-location ~ .*\.(jsp|asp|aspx)\$ {
+#location ~ .*\.(php|cgi|jsp|asp|aspx)$ {
+location ~ .*\.(jsp|asp|aspx)$ {
     return 301 http://www.baidu.com/s?wd=mmp;
 }
 ######################## Block SQL injections 防止SQL注入#############
-set \$block_sql_injections 0;
-if (\$query_string ~ \"union.*select.*\(") {
-set \$block_sql_injections 1;
+set $block_sql_injections 0;
+if ($query_string ~ \"union.*select.*\(") {
+set $block_sql_injections 1;
 }
-if (\$query_string ~ \"union.*all.*select.*\") {
-set \$block_sql_injections 1;
+if ($query_string ~ \"union.*all.*select.*\") {
+set $block_sql_injections 1;
 }
-if (\$query_string ~ \"concat.*\(\") {
-set \$block_sql_injections 1;
+if ($query_string ~ \"concat.*\(\") {
+set $block_sql_injections 1;
 }
-if (\$block_sql_injections = 1) {
+if ($block_sql_injections = 1) {
 return 403;
 }
 
 ########################lock file injections防止恶意请求############
 
-set \$block_file_injections 0;
-if (\$query_string ~ \"[a-zA-Z0-9_]=http://\") {
-set \$block_file_injections 1;
+set $block_file_injections 0;
+if ($query_string ~ \"[a-zA-Z0-9_]=http://\") {
+set $block_file_injections 1;
 }
-if (\$query_string ~ \"[a-zA-Z0-9_]=(\.\.//?)+\") {
-set \$block_file_injections 1;
+if ($query_string ~ \"[a-zA-Z0-9_]=(\.\.//?)+\") {
+set $block_file_injections 1;
 }
-if (\$query_string ~ \"[a-zA-Z0-9_]=/([a-z0-9_.]//?)+\") {
-set \$block_file_injections 1;
+if ($query_string ~ \"[a-zA-Z0-9_]=/([a-z0-9_.]//?)+\") {
+set $block_file_injections 1;
 }
-if (\$block_file_injections = 1) {
+if ($block_file_injections = 1) {
 return 403;
 }
 
 ########################Block common exploits防止XSS注入############
-set \$block_common_exploits 0;
-if (\$query_string ~ \"(<|%3C).*script.*(>|%3E)\") {
-set \$block_common_exploits 1;
+set $block_common_exploits 0;
+if ($query_string ~ \"(<|%3C).*script.*(>|%3E)\") {
+set $block_common_exploits 1;
 }
-if (\$query_string ~ \"GLOBALS(=|\[|\%[0-9A-Z]{0,2})\") {
-set \$block_common_exploits 1;
+if ($query_string ~ \"GLOBALS(=|\[|\%[0-9A-Z]{0,2})\") {
+set $block_common_exploits 1;
 }
-if (\$query_string ~ \"_REQUEST(=|\[|\%[0-9A-Z]{0,2})\") {
-set \$block_common_exploits 1;
+if ($query_string ~ \"_REQUEST(=|\[|\%[0-9A-Z]{0,2})\") {
+set $block_common_exploits 1;
 }
-if (\$query_string ~ \"proc/self/environ\") {
-set \$block_common_exploits 1;
+if ($query_string ~ \"proc/self/environ\") {
+set $block_common_exploits 1;
 }
-if (\$query_string ~ \"mosConfig_[a-zA-Z_]{1,21}(=|\%3D)\") {
-set \$block_common_exploits 1;
+if ($query_string ~ \"mosConfig_[a-zA-Z_]{1,21}(=|\%3D)\") {
+set $block_common_exploits 1;
 }
-if (\$query_string ~ \"base64_(en|de)code\(.*\)\") {
-set \$block_common_exploits 1;
+if ($query_string ~ \"base64_(en|de)code\(.*\)\") {
+set $block_common_exploits 1;
 }
-if (\$block_common_exploits = 1) {
+if ($block_common_exploits = 1) {
 return 403;
 }
 
 ########################Block common exploits #############
-set \$block_spam 0;
-if (\$query_string ~ \"\b(ultram|unicauca|valium|viagra|vicodin|xanax|ypxaieo)\b\") {
-set \$block_spam 1;
+set $block_spam 0;
+if ($query_string ~ \"\b(ultram|unicauca|valium|viagra|vicodin|xanax|ypxaieo)\b\") {
+set $block_spam 1;
 }
-if (\$query_string ~ \"\b(erections|hoodia|huronriveracres|impotence|levitra|libido)\b\") {
-set \$block_spam 1;
+if ($query_string ~ \"\b(erections|hoodia|huronriveracres|impotence|levitra|libido)\b\") {
+set $block_spam 1;
 }
-if (\$query_string ~ \"\b(ambien|blue\spill|cialis|cocaine|ejaculation|erectile)\b\") {
-set \$block_spam 1;
+if ($query_string ~ \"\b(ambien|blue\spill|cialis|cocaine|ejaculation|erectile)\b\") {
+set $block_spam 1;
 }
-if (\$query_string ~ \"\b(lipitor|phentermin|pro[sz]ac|sandyauer|tramadol|troyhamby)\b\") {
-set \$block_spam 1;
+if ($query_string ~ \"\b(lipitor|phentermin|pro[sz]ac|sandyauer|tramadol|troyhamby)\b\") {
+set $block_spam 1;
 }
-if (\$block_spam = 1) {
+if ($block_spam = 1) {
 return 403;
 } 
 ########################Block user agents  防止用户代理请求 #############
-set \$block_user_agents 0;
+set $block_user_agents 0;
 # Dont disable wget if you need it to run cron jobs!
-#if (\$http_user_agent ~ \"Wget\") {
-# set \$block_user_agents 1;
+#if ($http_user_agent ~ \"Wget\") {
+# set $block_user_agents 1;
 #}
 
 # Disable Akeeba Remote Control 2.5 and earlier
-if (\$http_user_agent ~ \"Indy Library\") {
-set \$block_user_agents 1;
+if ($http_user_agent ~ \"Indy Library\") {
+set $block_user_agents 1;
 }
 
 # Common bandwidth hoggers and hacking tools.
-if (\$http_user_agent ~ \"libwww-perl\") {
-set \$block_user_agents 1;
+if ($http_user_agent ~ \"libwww-perl\") {
+set $block_user_agents 1;
 }
-if (\$http_user_agent ~ \"GetRight\") {
-set \$block_user_agents 1;
+if ($http_user_agent ~ \"GetRight\") {
+set $block_user_agents 1;
 }
-if (\$http_user_agent ~ \"GetWeb!\") {
-set \$block_user_agents 1;
+if ($http_user_agent ~ \"GetWeb!\") {
+set $block_user_agents 1;
 }
-if (\$http_user_agent ~ \"Go!Zilla\") {
-set \$block_user_agents 1;
+if ($http_user_agent ~ \"Go!Zilla\") {
+set $block_user_agents 1;
 }
-if (\$http_user_agent ~ \"Download Demon\") {
-set \$block_user_agents 1;
+if ($http_user_agent ~ \"Download Demon\") {
+set $block_user_agents 1;
 }
-if (\$http_user_agent ~ \"Go-Ahead-Got-It\") {
-set \$block_user_agents 1;
+if ($http_user_agent ~ \"Go-Ahead-Got-It\") {
+set $block_user_agents 1;
 }
-if (\$http_user_agent ~ \"TurnitinBot\") {
-set \$block_user_agents 1;
+if ($http_user_agent ~ \"TurnitinBot\") {
+set $block_user_agents 1;
 }
-if (\$http_user_agent ~ \"GrabNet\") {
-set \$block_user_agents 1;
+if ($http_user_agent ~ \"GrabNet\") {
+set $block_user_agents 1;
 }
-if (\$block_user_agents = 1) {
+if ($block_user_agents = 1) {
 return 403;
 }
-''' >> $nginx_install_path/nginx/conf/vhost/commom.server.module
+''' > $nginx_install_path/nginx/conf/vhost/commom.server.module
 echo "配置卡机管理系统nginx卡机IP访问白名单" && sleep 2s
 echo '''
-geo \$clientRealIp \$geo{
+geo $clientRealIp $geo{
 default 1;
 127.0.0.1/32 0;
 #vdi
@@ -596,9 +599,10 @@ echo "server {
     listen       80;
     server_name  ${service_web_domain};
     root         $workdir/$cardplatformfront/dist;
+    include      $nginx_install_path/nginx/conf/vhost/commom.server.module;
     access_log ${nginx_install_path}/nginx/logs/${service_web_domain}_access.log main_json;
     error_log ${nginx_install_path}/nginx/logs/${service_web_domain}_error.log;
-    set \$resp_body \"\";
+    set \$resp_body '';
     body_filter_by_lua '
     local resp_body = string.sub(ngx.arg[1],1,1000)
     ngx.ctx.buffered=(ngx.ctx.buffered or \"\")..resp_body
@@ -625,6 +629,7 @@ echo "配置卡机管理系统nginx webapi server配置文件" && sleep 2s
 echo "server {
     listen       80;
     server_name  ${service_webapi_domain};
+    include      $nginx_install_path/nginx/conf/vhost/commom.server.module;
     access_log ${nginx_install_path}/nginx/logs/${service_webapi_domain}_access.log main_json;
     error_log ${nginx_install_path}/nginx/logs/${service_webapi_domain}_error.log;
     set $resp_body \"\";
@@ -652,9 +657,10 @@ echo "配置卡机管理系统nginx websocket server配置文件" && sleep 2s
 echo "server {
     listen       80;
     server_name  ${service_websocket_domain};
+    include      $nginx_install_path/nginx/conf/vhost/commom.server.module;
     access_log '${nginx_install_path}/nginx/logs/${service_websocket_domain}_access.log main_json;
     error_log ${nginx_install_path}/nginx/logs/${service_websocket_domain}_error.log;
-    set \$resp_body \"\";
+    set \$resp_body \" \";
     body_filter_by_lua '
     local resp_body = string.sub(ngx.arg[1],1,1000)
     ngx.ctx.buffered=(ngx.ctx.buffered or \"\")..resp_body
@@ -682,7 +688,7 @@ echo "server {
     }
 }
 " >$nginx_install_path/nginx/conf/vhost/pubcloudws.conf
-echo ""
+echo "配置nginx日志切割文件" && sleep 2s
 echo '''
 BASEPATH='$nginx_install_path'/nginx/logs
 ACCESSPATH='$nginx_install_path'/nginx/logs/access_logs
@@ -707,7 +713,7 @@ mv $BASEPATH/$elog $ERRORPATH/$(date -d yesterday +%Y%m%d%H)_$elog;
 touch $BASEPATH/$elog;
 kill -USR1 `cat /var/run/nginx.pid`;
 done
-''' >$nginx_install_path/nginx/bin/nginxcutlog.sh
+''' >$nginx_install_path/nginx/sbin/nginxcutlog.sh
     curr_user=`echo $USER`
     echo "1 0 * * * bash $nginx_install_path/nginx/bin/nginxcutlog.sh" >> "/var/spool/cron/$curr_user"
     systemctl restart nginx && sleep 5s

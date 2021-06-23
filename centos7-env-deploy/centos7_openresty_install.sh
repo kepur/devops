@@ -19,6 +19,7 @@ pkg_dir=/opt/pkg_dir
 openresty_root_url="https://openresty.org/download/"
 nginx_install_path=/opt
 openresty_install(){
+    useradd -s /sbin/nologin www 
     openresty_version=$1
     echo $openresty_version
 	openresty=openresty-$openresty_version.tar.gz
@@ -60,26 +61,24 @@ openresty_install(){
     else
         echo "非1.17版本" && sleep 2s
     fi
-    ./configure --user=www --group=www  --with-luajit --without-lua_resty_dns --without-lua_resty_websocket --without-http_redis2_module --with-http_postgres_module --with-http_stub_status_module --with-http_ssl_module --with-http_gzip_static_module --with-openssl=/usr/local/openssl --prefix=$nginx_install_path
-    cd 
+    ./configure --user=www --group=www  --with-luajit --without-lua_resty_dns --without-lua_resty_websocket --without-http_redis2_module  --with-http_stub_status_module --with-http_ssl_module --with-http_gzip_static_module --with-openssl=/usr/local/openssl --prefix=$nginx_install_path
+    cd $pkg_dir/openresty-$openresty_version
     gmake && gmake install
-    echo '''
-    [Unit]
-    Description=nginx
-    After=network.target
-    [Service]
-    Type=forking
-    ExecStart='${nginx_install_path}'/nginx/sbin/nginx
-    ExecReload='${nginx_install_path}'/nginx/sbin/nginx reload
-    ExecStop='${nginx_install_path}'/nginx/sbin/nginx quit
-    PrivateTmp=true
-    [Install]
-    WantedBy=multi-user.target
-    ''' >> /lib/systemd/system/nginx.service
+echo '''[Unit]
+Description=nginx
+After=network.target
+[Service]
+Type=forking
+ExecStart='${nginx_install_path}'/nginx/sbin/nginx
+ExecReload='${nginx_install_path}'/nginx/sbin/nginx reload
+ExecStop='${nginx_install_path}'/nginx/sbin/nginx quit
+PrivateTmp=true
+[Install]
+WantedBy=multi-user.target
+''' >> /lib/systemd/system/nginx.service
+    systemctl daemon-reload
     systemctl enable nginx.service
-    systemctl start nginx.service
-    systemctl enable ntpd
-    systemctl enable nginx
+    systemctl start nginx
 }
 overwrite_nginx_configfile(){
 cores=$( awk -F: '/model name/ {core++} END {print core}' /proc/cpuinfo )
@@ -99,29 +98,29 @@ case "$cores" in
     echo "8核以上CPU"
     cpu_affinity="00000001 00000010 00000100 00001000 00010000 00100000 01000000 10000000"
 ;;
-echo '''
+echo "
 user  www;
-worker_processes  '${worker_processes}';
-worker_cpu_affinity '${cpu_affinity}';
+worker_processes  ${worker_processes};
+worker_cpu_affinity ${cpu_affinity};
 error_log  logs/error.log;
 #pid        logs/nginx.pid;
 events {
-    worker_connections  '${openfilelimits}';
+    worker_connections  ${openfilelimits};
 }
 http {
     include       mime.types;
     default_type  application/octet-stream;
 
     map $HTTP_CF_CONNECTING_IP  $clientRealIp {
-    ""    $remote_addr;
+    \"\"    $remote_addr;
     ~^(?P<firstAddr>[0-9.]+),?.*$    $firstAddr;
     }
     proxy_set_header X-Real-IP $remote_addr;
     #proxy_set_header X-Real-IP $clientRealIp;
-    log_format  main  '$http_x_forwarded_for- $remote_user [$time_local] "$request" '
-                      '$status $body_bytes_sent "$http_referer" '
-                      '"$http_user_agent" "$http_x_forwarded_for"';
-    log_format  main_json '{"time_local":[$time_local],
+    log_format  main  "$http_x_forwarded_for- $remote_user [$time_local] $request
+                    $status $body_bytes_sent $http_referer
+                    $http_user_agent $http_x_forwarded_for";
+    log_format  main_json  ' {"time_local":"$time_local",
     "ClientRealIp":"$clientRealIp",
     "request_domain":"$http_host",
     "request":"$request",
@@ -137,7 +136,7 @@ http {
     "fastcgi_script_name":"$fastcgi_script_name",
     "document_root":"$document_root",
     "request_body":"$request_body",
-    "response_body":"$resp_body"}';
+    "response_body":"$resp_body"} ';
     access_log  logs/access.log  main;
     sendfile        on;
     server_tokens off;
@@ -190,7 +189,7 @@ http {
         return 301 https://www.baidu.com/s?wd=wtf;
     }
 }
-''' >> $nginx_install_path/nginx/conf/nginx.conf
+" >> $nginx_install_path/nginx/conf/nginx.conf
 echo '''
 server {
     listen       443 ssl;
