@@ -69,6 +69,22 @@ get_os_info(){
     echo "########################################"
 }
 
+change_yum_source(){
+    wget http://mirrors.aliyun.com/repo/Centos-7.repo
+    mv /etc/yum.repos.d/CentOS-Base.repo /etc/yum.repos.d/CentOS-Base.repo.bak
+    mv /etc/yum.repos.d/Centos-7.repo /etc/yum.repos.d/CentOs-Base.repo
+    yum clean all
+    yum makecache
+}
+
+yum_init(){
+    yum update -y && yum install gcc pcre pcre-devel zlib-devel openssl perl openssl-devel libffi-devel -y
+    yum groupinstall "Development tools"  -y 
+    yum install unzip zlib-devel bzip2-devel openssl-devel ncurses-devel sqlite-devel readline-devel tk-devel gdbm-devel db4-devel libpcap-devel xz-devel  readline-devel  -y
+    #wget http://mirror.centos.org/centos/7/os/x86_64/Packages/libffi-devel-3.0.13-18.el7.x86_64.rpm
+}
+
+
 change_localtime(){
 	echo "安装ntp服务并校验时间..............."
 	timedatectl set-timezone Asia/Shanghai
@@ -76,30 +92,17 @@ change_localtime(){
 	systemctl start ntpd
 	systemctl enable ntpd
 	systemctl enable ntpd
+    echo "当前时间为:" && date
 }
 
 change_ssh_port(){
     local port=$1
 	echo "更改ssh默认端口..............." && sleep 1s
     setenforce 0
-	sed -i '/^Port.*/d' /etc/ssh/sshd_config && echo "Port $port" >> /etc/ssh/sshd_config
+    #注释原来端口 
+    #sed -i '/^Port.*/d' /etc/ssh/sshd_config
+    sed -i "/Port.*/a Port $port" /etc/ssh/sshd_config
 	systemctl restart sshd.service
-}
-
-change_yum_source(){
-    wget http://mirrors.aliyun.com/repo/Centos-7.repo
-    mv /etc/yum.repos.d/CentOs-Base.repo /etc/yum.repos.d/CentOs-Base.repo.bak
-    mv /etc/yum.repos.d/Centos-7.repo /etc/yum.repos.d/CentOs-Base.repo
-    yum clean all
-    yum makecache
-}
-
-
-yum_init(){
-    yum update -y && yum install gcc pcre pcre-devel zlib-devel openssl perl openssl-devel libffi-devel -y
-    yum groupinstall "Development tools"  -y 
-    yum install unzip zlib-devel bzip2-devel openssl-devel ncurses-devel sqlite-devel readline-devel tk-devel gdbm-devel db4-devel libpcap-devel xz-devel  readline-devel  -y
-    #wget http://mirror.centos.org/centos/7/os/x86_64/Packages/libffi-devel-3.0.13-18.el7.x86_64.rpm
 }
 
 
@@ -134,6 +137,7 @@ openssl_install(){
 
 
 redis_install(){
+    echo "正在安装redis" && sleep 3s
     local redis_version=$1
 	echo $redis_version
 	local Redis=redis-$redis_version.tar.gz
@@ -173,7 +177,7 @@ redis_install(){
 	[Install]
 	WantedBy=multi-user.target
 	''' >> /lib/systemd/system/redis.service
-	system daemon-reload
+	systemctl daemon-reload
 	systemctl enable redis.service
 	systemctl restart redis.service
 }
@@ -210,6 +214,7 @@ mysql_install(){
     #read -p "请输入mysqlroot的密码" newMysqlPass
     #https://repo.mysql.com//mysql80-community-release-el7-3.noarch.rpm
     #https://repo.mysql.com//mysql57-community-release-el7-8.noarch.rpm
+    #https://repo.mysql.com//mysql57-community-release-el7-3.noarch.rpm
     #mysqlurl="https://jp-1301785062.cos.ap-tokyo.myqcloud.com/mysql57-community-release-el7-8.noarch.rpm"
     #检查是否安装
     #yum repolist enabled | grep "mysql.*-community.*"
@@ -219,21 +224,21 @@ mysql_install(){
     #mysql_version="mysql80"
     if [[ $openresty_version =~ "mysql57" ]]
     then
-        mysql=Python-$mysql_version-community-release-el7-8.noarch.rpm
+        mysql=$mysql_version-community-release-el7-3.noarch.rpm
     else
-        mysql=Python-$mysql_version-community-release-el7-3.noarch.rpm
+        mysql=$mysql_version-community-release-el7-8.noarch.rpm
     fi
-    if [ -f "$pkg_dir$python" ];then
-		echo " 文件 $python 找到 "
+    if [ -f "$pkg_dir$mysql" ];then
+		echo " 文件 $mysql 找到 "
 	else
-		echo "文件 $python 不存在将自动下载" 
+		echo "文件 $mysql 不存在将自动下载" 
 		if ! wget -c -t3 -T60 ${mysql_root_url}/$mysql -P $pkg_dir/; then
             echo "Failed to download $mysql \n 下载$mysql, 请手动下载到${pkg_dir} \n please download it to ${pkg_dir} directory manually and try again."
             echo -e "请把下列安装包放到$pkg_dir目录下 \n\n " $$ sleep 2s
 			exit 1
         fi
 	fi
-    cd $pkg_dir && rpm -ivh mysql57-community-release-el7-8.noarch.rpm
+    cd $pkg_dir && rpm -ivh $mysql
 	yum -y install mysql-server mysql-devel
 	service mysqld restart
 	systemctl enable mysqld.services	
@@ -735,7 +740,7 @@ erlang_install(){
 	ln -s /usr/local/erlang/bin/erl /usr/bin/erl
 }
 
-
+#https://github.com/rabbitmq/rabbitmq-server/releases/download/3.7.15/rabbitmq-server-generic-unix-3.7.15.tar.xz
 rabbit_mq_install(){
     local rabbitmq_version=$1
 	echo $rabbitmq_version
@@ -745,7 +750,7 @@ rabbit_mq_install(){
 		echo " 文件 $rabbitmq 找到 "
 	else
 		echo "文件 $rabbitmq 不存在将自动下载" 
-		if ! wget -c -t3 -T60 ${erlang_root_url}/$rabbitmq_version/$rabbitmq -P $pkg_dir/; then
+		if ! wget -c -t3 -T60 $rabbitmq_root_url/v$rabbitmq_version/$rabbitmq -P $pkg_dir/; then
             echo "Failed to download $rabbitmq \n 下载$rabbitmq, 请手动下载到${pkg_dir} \n please download it to ${pkg_dir} directory manually and try again."
             echo -e "请把下列安装包放到$pkg_dir目录下 \n\n " $$ sleep 2s
 			exit 1
@@ -760,6 +765,9 @@ rabbit_mq_install(){
 	source /etc/profile
 	rabbitmq-server -detached
 	rabbitmq-plugins enable rabbitmq_management
+    echo "rabbitmq当前状态" && sleep 2s
+    rabbitmqctl status
+    sleep 3s
 }
 
 
@@ -1186,8 +1194,6 @@ python manage.py createsuperuser
 uwsgi --ini uwsgi.ini
 ./celery start
 }
-
-
 card_service_install(){
     get_os_info 
     change_yum_source 

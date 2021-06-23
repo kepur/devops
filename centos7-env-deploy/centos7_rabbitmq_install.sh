@@ -47,7 +47,7 @@ rabbit_mq_install(){
 		echo " 文件 $rabbitmq 找到 "
 	else
 		echo "文件 $rabbitmq 不存在将自动下载" 
-		if ! wget -c -t3 -T60 ${erlang_root_url}/$rabbitmq_version/$rabbitmq -P $pkg_dir/; then
+		if ! wget -c -t3 -T60 ${rabbitmq_root_url}/v$rabbitmq_version/$rabbitmq -P $pkg_dir/; then
             echo "Failed to download $rabbitmq \n 下载$rabbitmq, 请手动下载到${pkg_dir} \n please download it to ${pkg_dir} directory manually and try again."
             echo -e "请把下列安装包放到$pkg_dir目录下 \n\n " $$ sleep 2s
 			exit 1
