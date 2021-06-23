@@ -78,9 +78,9 @@ change_yum_source(){
 }
 
 yum_init(){
-    yum update -y && yum install gcc pcre pcre-devel zlib-devel openssl perl openssl-devel libffi-devel -y
+    yum update -y && yum install gcc pcre pcre-devel zlib-devel openssl perl libffi-devel -y
     yum groupinstall "Development tools"  -y 
-    yum install unzip zlib-devel bzip2-devel openssl-devel ncurses-devel sqlite-devel readline-devel tk-devel gdbm-devel db4-devel libpcap-devel xz-devel  readline-devel  -y
+    yum install unzip zlib-devel bzip2-devel ncurses-devel sqlite-devel readline-devel tk-devel gdbm-devel db4-devel libpcap-devel xz-devel  readline-devel  -y
     #wget http://mirror.centos.org/centos/7/os/x86_64/Packages/libffi-devel-3.0.13-18.el7.x86_64.rpm
 }
 
@@ -321,7 +321,8 @@ WantedBy=multi-user.target
 
 
 overwrite_nginx_configfile(){
-    local worker_processes=`expr $( awk -F: '/model name/ {core++} END {print core}' /proc/cpuinfo ) \* 2` 
+    #local worker_processes=`expr $( awk -F: '/model name/ {core++} END {print core}' /proc/cpuinfo ) \* 2` 
+    local worker_processes=`expr $( awk -F: '/model name/ {core++} END {print core}' /proc/cpuinfo ) ` 
     local openfilelimits=$( ulimit -a|grep "open files" | awk '{print $4 }')
     mv $nginx_install_path/nginx/conf/nginx.conf $nginx_install_path/nginx/conf/nginx.confbak
     case "$cores" in
@@ -417,6 +418,7 @@ http {
     proxy_cache_path ${nginx_install_path}/nginx/cache/proxy_cache levels=1:2 keys_zone=cache_one:100m inactive=1d max_size=30g; #100m和30G，按照服务要求，适当增大
     #################### JumpSever include #########################
     include vhost/*.conf;
+    include vhost/*.map;
     ####################undeifne domain #########################
     server {
         listen 80 default_server;
@@ -438,6 +440,7 @@ location / {
     if ( $geo = 1 ){
         return 403;
     }
+}
 ########################拦截GET、POST 以及 HEAD 之外的请求############
 if ($request_method !~ ^(GET|HEAD|POST)$ ) {
 	return    444;
@@ -610,9 +613,6 @@ echo "server {
     ngx.var.resp_body = ngx.ctx.buffered
     end';
     location / {
-    if ( \$geo = 1 ){
-        return 403;
-    }
     add_header Access-Control-Allow-Orgin '*';
     index index.html;
     }
@@ -828,26 +828,33 @@ mysql_service_config(){
 
 #配置rabbitmq
 rabbitmq_service_config(){
+    source /etc/profile 
     local rabbitmq_user=$1
     local rabbitmq_passwd=$2
+    echo "为rabbit 设置用户名为:$rabbitmq_user 密码为:$rabbitmq_passwd" && sleep 3s
     rabbitmqctl list_users
     rabbitmqctl add_user $rabbitmq_user $rabbitmq_passwd
     rabbitmqctl set_user_tags $rabbitmq_user administrator
     rabbitmqctl set_permissions -p / $rabbitmq_user ".*" ".*" ".*"
     rabbitmqctl list_permissions
+    echo "请检查rabbitmq 状态" && sleep 2s
+    rabbitmqctl status
+    sleep 3s
 }
 
 
 #redis配置密码
 redis_service_config(){
     rediswd=$1
+    echo "您的redis密码设置为: $rediswd"
     sed -i "/requirepass.*/a requirepass $rediswd" /etc/redis/6379.conf
+    systemctl restart redis
 }
 
 
 #配置卡机前端程序
 cardsvr_frontend_config(){
-	if [ -f "$workdir${cardplatformfront}.zip" ];then
+	if [ -f "$workdir/${cardplatformfront}.zip" ];then
 		echo " 文件 ${cardplatformfront}.zip 找到 "
 	else
 		echo "文件 ${cardplatformfront}.zip 不存在将自动下载" 
@@ -857,9 +864,9 @@ cardsvr_frontend_config(){
 			exit 1
         fi
 	fi
-cd $workdir && unzip $workdir${cardplatformfront}.zip    
+cd $workdir && unzip $workdir/${cardplatformfront}.zip    
 #替换
-mv $workdir/cardplatform-frond-end/src/utils/request.js $workdir/cardplatform-frond-end/src/utils/request.jsbak
+mv $workdir/cardplatform_front_end/src/utils/request.js $workdir/cardplatform_front_end/src/utils/request.jsbak
 #sed -i "/^baseURL.*/d" $workdir/cardplatform-frond-end/src/utils/request.js && echo "baseURL: 'https://cardapi.zfgs168.com',">> 
 echo "
 import axios from 'axios';
@@ -905,8 +912,21 @@ service.interceptors.response.use(
 )
 export default service
 " > $workdir/$cardplatformfront/src/utils/request.js
-  cd $workdir/$cardplatformfront && npm install  
+  cd $workdir/$cardplatformfront 
+  rm -rf $workdir/$cardplatformfront/node_modules/
+  chmod -R 775 $workdir/$cardplatformfront
+  npm cache clean --force
+  npm install  
   npm run build
+}
+#装错重新安装
+remove_backend_service(){
+    rm -f /usr/lib/systemd/system/websocket.service
+    rm -f /usr/local/bin/uwsgi
+    rm -f /usr/local/bin/virtualenv
+    rm -rf $workdir${cardplatformback}
+    pip uninstall uwsgi -y
+    pip uninstall virtualenv -y
 }
 #配置卡机后端程序
 cardsvr_backend_config(){
@@ -920,8 +940,13 @@ cardsvr_backend_config(){
 			exit 1
         fi
 	fi
+
+cd $workdir && unzip $workdir/${cardplatformback}.zip
+cd $workdir${cardplatformback}
 pip install virtualenv
 python -m pip install --upgrade pip
+#自定义安装openssl 需要卸载默认yum安装的openssl-devel
+yum remove -y openssl-devel
 python -m pip install uwsgi 
 ln -s /usr/local/python3.8.9/bin/uwsgi /usr/local/bin/uwsgi
 ln -s /usr/local/python3.8.9/bin/virtualenv /usr/local/bin/virtualenv
@@ -935,6 +960,7 @@ ln -s /usr/local/python3.8.9/bin/virtualenv /usr/local/bin/virtualenv
 #计划任务配置 ./celery start
 #获取卡机前端升级包
 #uwsgi配置     .uwsgi.ini
+echo "写入uwsgi配置文件到 $workdir/$cardplatformback/" && sleep 2s
 mv $workdir/$cardplatformback/uwsgi.ini $workdir/$cardplatformback/uwsgi.bak
 echo "
 [uwsgi]
@@ -949,8 +975,8 @@ daemonize=./pubcloud.log
 http=:10000
 processes=4
 ">${cardplatform_download_url}/${cardplatformback}/uwsgi.ini
-echo "
-[Unit]
+echo "写入websocket配置文件到/usr/lib/systemd/system/websocket.service" && sleep 2s
+echo "[Unit]
 Description=public cloud platform websocket service
 After=network.target
 
@@ -964,11 +990,11 @@ Restart=always
 [Install]
 WantedBy=multi-user.target
 ">/usr/lib/systemd/system/websocket.service
+systemctl daemon-reload
 systemctl start websocket
-#rabbitmq 配置 /main/config.yml
+echo "写入rabbitmq 配置文件到 $workdir/$cardplatformback/main/config.yml" && sleep 2s
 mv $workdir/$cardplatformback/main/config.yml $workdir/$cardplatformback/main/config.ymlbak
-echo "
-main:
+echo "main:
   env: 'DEMO'
   debug: True
   #log_type: 'file'
@@ -1019,10 +1045,9 @@ openstack:
     ip_range_min: 10
     ip_range_max: 240
 "> $workdir/$cardplatformback/main/config.yml
-#添加redis和mysql配置到python设置档
+echo "#添加redis和mysql配置到python设置档到 $workdir/$cardplatformback/main/setting.py" && sleep 2s
 mv $workdir/$cardplatformback/main/setting.py $workdir/$cardplatformback/main/setting.pybak
-echo "
-from pathlib import Path
+echo "from pathlib import Path
 import sys
 import os
 import yaml
@@ -1190,16 +1215,22 @@ else:
     logger = log.stream_logger()
 
 ">$workdir/$cardplatformback/main/setting.py
+echo "创建python虚拟环境" && sleep 2s
 cd $workdir && virtualenv cardmgtplatform
+echo "进入python虚拟环境并导入环境变量" && sleep 2s
 source $workdir/cardmgtplatform/bin/activate
+echo "初始软件" && sleep 2s
 cd $workdir/$cardplatformback && pip install -r requirement.txt
+echo "初始化映射数据库" && sleep 2s
 python manage.py makemigrations
 python manage.py migrate
-echo "输入用户名 邮箱 密码 " && sleep 3s
-python manage.py createsuperuser 
+echo "下面将创建系统用户 " && sleep 3s
+python manage.py createsuperuser
 uwsgi --ini uwsgi.ini
+echo "启动计划任务" && sleep 2s
 ./celery start
 }
+
 card_service_install(){
     get_os_info 
     change_yum_source 
