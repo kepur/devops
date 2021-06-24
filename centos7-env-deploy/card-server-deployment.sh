@@ -1287,19 +1287,22 @@ sh ./celery.sh start
 }
 card_service_install(){
     get_os_info 
-    #change_yum_source 
-    #yum_init
-    #change_localtime
+    #更改yum源
+    change_yum_source 
+    #安装依赖包
+    yum_init
+    #更改时区同步时间
+    change_localtime
     #更改ssh端口 指定2631
-    #change_ssh_port 2631
+    change_ssh_port 2631
     #安装openssl 指定1.1.1k版本
-    #openssl_install 1.1.1k
+    openssl_install 1.1.1k
     #安装redis 指定62.3版本
-    #redis_install 6.2.3
+    redis_install 6.2.3
     #安装python 指定3.8.9版本
-    #python_install 3.8.9
+    python_install 3.8.9
     #安装rabbit mq 指定22.0版本
-    #erlang_install 22.0
+    erlang_install 22.0
     #安装rabbit mq 指定3.7.15版本
     rabbit_mq_install 3.7.15
     #安装mysql
