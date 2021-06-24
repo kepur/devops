@@ -715,7 +715,7 @@ touch $BASEPATH/$elog;
 kill -USR1 `cat /var/run/nginx.pid`;
 done
 ''' >$nginx_install_path/nginx/sbin/nginxcutlog.sh
-    curr_user=`echo $USER`
+    curr_user=`echo 当前用户为:$USER 添加计划任务` && sleep 2s
     echo "1 0 * * * bash $nginx_install_path/nginx/bin/nginxcutlog.sh" >> "/var/spool/cron/$curr_user"
     systemctl restart nginx && sleep 5s
 }
@@ -736,7 +736,7 @@ erlang_install(){
 			exit 1
         fi
 	fi
-    cd $pkg_dir && echo "正在执行Erlang安装"
+    cd $pkg_dir && echo "正在执行Erlang安装" && sleep 2s
 	tar -zxvf $Erlang
 	mv otp_src_$erlang_version /usr/local/
 	cd /usr/local/otp_src_$erlang_version
@@ -1217,12 +1217,55 @@ else:
     logger = log.stream_logger()
 
 ">$workdir/$cardplatformback/main/settings.py
+cat <<EOF >$workdir/$cardplatformback/certify_install.py
+import os
+import os.path
+import ssl
+import stat
+import subprocess
+import sys
+
+STAT_0o775 = ( stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR
+             | stat.S_IRGRP | stat.S_IWGRP | stat.S_IXGRP
+             | stat.S_IROTH |                stat.S_IXOTH )
+
+
+def main():
+    openssl_dir, openssl_cafile = os.path.split(
+        ssl.get_default_verify_paths().openssl_cafile)
+
+    print(" -- pip install --upgrade certifi")
+    subprocess.check_call([sys.executable,
+        "-E", "-s", "-m", "pip", "install", "--upgrade", "certifi"])
+
+    import certifi
+
+    # change working directory to the default SSL directory
+    os.chdir(openssl_dir)
+    relpath_to_certifi_cafile = os.path.relpath(certifi.where())
+    print(" -- removing any existing file or link")
+    try:
+        os.remove(openssl_cafile)
+    except FileNotFoundError:
+        pass
+    print(" -- creating symlink to certifi certificate bundle")
+    os.symlink(relpath_to_certifi_cafile, openssl_cafile)
+    print(" -- setting permissions")
+    os.chmod(openssl_cafile, STAT_0o775)
+    print(" -- update complete")
+
+if __name__ == '__main__':
+    main()
+EOF
+echo "安装证书" && sleep 2s
+python install certify_install.py
 echo "创建python虚拟环境" && sleep 2s
 cd $workdir && virtualenv cardmgtplatform
 echo "进入python虚拟环境并导入环境变量" && sleep 2s
 source $workdir/cardmgtplatform/bin/activate
 echo "初始软件" && sleep 2s
 cd $workdir/$cardplatformback && pip install -r requirement.txt
+python install certify_install.py
 echo "初始化映射数据库" && sleep 2s
 python manage.py makemigrations
 python manage.py migrate
@@ -1232,7 +1275,6 @@ uwsgi --ini uwsgi.ini
 echo "启动计划任务" && sleep 2s
 ./celery.sh start
 }
-
 card_service_install(){
     get_os_info 
     change_yum_source 
