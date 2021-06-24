@@ -986,7 +986,7 @@ max-requests=4000
 daemonize=./pubcloud.log
 http=:10000
 processes=4
-">$workdir/$cardplatformback/${cardplatformback}/uwsgi.ini
+">$workdir/$cardplatformback/uwsgi.ini
 echo "写入websocket配置文件到/usr/lib/systemd/system/websocket.service" && sleep 2s
 echo "[Unit]
 Description=public cloud platform websocket service
