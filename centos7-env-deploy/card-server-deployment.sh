@@ -15,7 +15,7 @@ lbit=$( getconf LONG_BIT )
 host=$( hostname )
 kern=$( uname -r )
 #软件包安装路径
-pkg_dir=/opt/pkg_dir
+pkg_dir="/opt/pkg_dir"
 #下载地址
 openssl_root_url="https://www.openssl.org/source"
 python_root_url="https://www.python.org/ftp/python"
@@ -72,15 +72,15 @@ get_os_info(){
 }
 
 change_yum_source(){
-    wget http://mirrors.aliyun.com/repo/Centos-7.repo
-    mv /etc/yum.repos.d/CentOS-Base.repo /etc/yum.repos.d/CentOS-Base.repo.bak
-    mv /etc/yum.repos.d/Centos-7.repo /etc/yum.repos.d/CentOs-Base.repo
+    cd /etc/yum.repos.d
+    mv CentOS-Base.repo CentOS-Base.repo.backup
+    wget http://mirrors.163.com/.help/CentOS6-Base-163.repo
+    mv CentOS6-Base-163.repo CentOS-Base.repo
     yum clean all
-    yum makecache
 }
 
 yum_init(){
-    yum update -y && yum install gcc pcre pcre-devel zlib-devel openssl perl libffi-devel -y
+    yum update -y && yum install gcc pcre pcre-devel zlib-devel zlib openssl perl libffi-devel -y
     yum groupinstall "Development tools"  -y 
     yum install unzip zlib-devel bzip2-devel ncurses-devel sqlite-devel readline-devel tk-devel gdbm-devel db4-devel libpcap-devel xz-devel  readline-devel  -y
     #wget http://mirror.centos.org/centos/7/os/x86_64/Packages/libffi-devel-3.0.13-18.el7.x86_64.rpm
