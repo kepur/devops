@@ -446,7 +446,7 @@ http {
 echo "配置卡机管理系统nginx基本安全公共模块配置" && sleep 2s
 echo '''
 ########################设置IP白名单############
-location / {
+location /~* {
     if ( $geo = 1 ){
         return 403;
     }
@@ -463,13 +463,13 @@ location ~ .*\.(jsp|asp|aspx)$ {
 }
 ######################## Block SQL injections 防止SQL注入#############
 set $block_sql_injections 0;
-if ($query_string ~ \"union.*select.*\(") {
+if ($query_string ~ "union.*select.*\(") {
 set $block_sql_injections 1;
 }
-if ($query_string ~ \"union.*all.*select.*\") {
+if ($query_string ~ "union.*all.*select.*") {
 set $block_sql_injections 1;
 }
-if ($query_string ~ \"concat.*\(\") {
+if ($query_string ~ "concat.*\(") {
 set $block_sql_injections 1;
 }
 if ($block_sql_injections = 1) {
@@ -479,13 +479,13 @@ return 403;
 ########################lock file injections防止恶意请求############
 
 set $block_file_injections 0;
-if ($query_string ~ \"[a-zA-Z0-9_]=http://\") {
+if ($query_string ~ "[a-zA-Z0-9_]=http://") {
 set $block_file_injections 1;
 }
-if ($query_string ~ \"[a-zA-Z0-9_]=(\.\.//?)+\") {
+if ($query_string ~ "[a-zA-Z0-9_]=(\.\.//?)+") {
 set $block_file_injections 1;
 }
-if ($query_string ~ \"[a-zA-Z0-9_]=/([a-z0-9_.]//?)+\") {
+if ($query_string ~ "[a-zA-Z0-9_]=/([a-z0-9_.]//?)+") {
 set $block_file_injections 1;
 }
 if ($block_file_injections = 1) {
@@ -494,22 +494,22 @@ return 403;
 
 ########################Block common exploits防止XSS注入############
 set $block_common_exploits 0;
-if ($query_string ~ \"(<|%3C).*script.*(>|%3E)\") {
+if ($query_string ~ "(<|%3C).*script.*(>|%3E)") {
 set $block_common_exploits 1;
 }
-if ($query_string ~ \"GLOBALS(=|\[|\%[0-9A-Z]{0,2})\") {
+if ($query_string ~ "GLOBALS(=|\[|\%[0-9A-Z]{0,2})") {
 set $block_common_exploits 1;
 }
-if ($query_string ~ \"_REQUEST(=|\[|\%[0-9A-Z]{0,2})\") {
+if ($query_string ~ "_REQUEST(=|\[|\%[0-9A-Z]{0,2})") {
 set $block_common_exploits 1;
 }
-if ($query_string ~ \"proc/self/environ\") {
+if ($query_string ~ "proc/self/environ") {
 set $block_common_exploits 1;
 }
-if ($query_string ~ \"mosConfig_[a-zA-Z_]{1,21}(=|\%3D)\") {
+if ($query_string ~ "mosConfig_[a-zA-Z_]{1,21}(=|\%3D)") {
 set $block_common_exploits 1;
 }
-if ($query_string ~ \"base64_(en|de)code\(.*\)\") {
+if ($query_string ~ "base64_(en|de)code\(.*\)") {
 set $block_common_exploits 1;
 }
 if ($block_common_exploits = 1) {
@@ -518,16 +518,16 @@ return 403;
 
 ########################Block common exploits #############
 set $block_spam 0;
-if ($query_string ~ \"\b(ultram|unicauca|valium|viagra|vicodin|xanax|ypxaieo)\b\") {
+if ($query_string ~ "\b(ultram|unicauca|valium|viagra|vicodin|xanax|ypxaieo)\b") {
 set $block_spam 1;
 }
-if ($query_string ~ \"\b(erections|hoodia|huronriveracres|impotence|levitra|libido)\b\") {
+if ($query_string ~ "\b(erections|hoodia|huronriveracres|impotence|levitra|libido)\b") {
 set $block_spam 1;
 }
-if ($query_string ~ \"\b(ambien|blue\spill|cialis|cocaine|ejaculation|erectile)\b\") {
+if ($query_string ~ "\b(ambien|blue\spill|cialis|cocaine|ejaculation|erectile)\b") {
 set $block_spam 1;
 }
-if ($query_string ~ \"\b(lipitor|phentermin|pro[sz]ac|sandyauer|tramadol|troyhamby)\b\") {
+if ($query_string ~ "\b(lipitor|phentermin|pro[sz]ac|sandyauer|tramadol|troyhamby)\b") {
 set $block_spam 1;
 }
 if ($block_spam = 1) {
@@ -536,38 +536,38 @@ return 403;
 ########################Block user agents  防止用户代理请求 #############
 set $block_user_agents 0;
 # Dont disable wget if you need it to run cron jobs!
-#if ($http_user_agent ~ \"Wget\") {
+#if ($http_user_agent ~ "Wget") {
 # set $block_user_agents 1;
 #}
 
 # Disable Akeeba Remote Control 2.5 and earlier
-if ($http_user_agent ~ \"Indy Library\") {
+if ($http_user_agent ~ "Indy Library") {
 set $block_user_agents 1;
 }
 
 # Common bandwidth hoggers and hacking tools.
-if ($http_user_agent ~ \"libwww-perl\") {
+if ($http_user_agent ~ "libwww-perl") {
 set $block_user_agents 1;
 }
-if ($http_user_agent ~ \"GetRight\") {
+if ($http_user_agent ~ "GetRight") {
 set $block_user_agents 1;
 }
-if ($http_user_agent ~ \"GetWeb!\") {
+if ($http_user_agent ~ "GetWeb!") {
 set $block_user_agents 1;
 }
-if ($http_user_agent ~ \"Go!Zilla\") {
+if ($http_user_agent ~ "Go!Zilla") {
 set $block_user_agents 1;
 }
-if ($http_user_agent ~ \"Download Demon\") {
+if ($http_user_agent ~ "Download Demon") {
 set $block_user_agents 1;
 }
-if ($http_user_agent ~ \"Go-Ahead-Got-It\") {
+if ($http_user_agent ~ "Go-Ahead-Got-It") {
 set $block_user_agents 1;
 }
-if ($http_user_agent ~ \"TurnitinBot\") {
+if ($http_user_agent ~ "TurnitinBot") {
 set $block_user_agents 1;
 }
-if ($http_user_agent ~ \"GrabNet\") {
+if ($http_user_agent ~ "GrabNet") {
 set $block_user_agents 1;
 }
 if ($block_user_agents = 1) {
