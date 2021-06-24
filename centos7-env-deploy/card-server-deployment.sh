@@ -407,7 +407,7 @@ http {
     gzip_buffers 4 16k;
     gzip_http_version 1.1;
     gzip_comp_level 3;
-    gzip_disable "MSIE [1-6].";
+    gzip_disable \"MSIE [1-6].\";
     gzip_types text/plain application/x-javascript text/css text/xml application/xml image/jpeg image/gif image/png;
     gzip_vary on;
     gzip_proxied any;
@@ -879,8 +879,8 @@ cd $workdir && unzip $workdir/${cardplatformfront}.zip
 #替换
 mv $workdir/cardplatform_front_end/src/utils/request.js $workdir/cardplatform_front_end/src/utils/request.jsbak
 #sed -i "/^baseURL.*/d" $workdir/cardplatform-frond-end/src/utils/request.js && echo "baseURL: 'https://cardapi.zfgs168.com',">> 
-echo "
-import axios from 'axios';
+echo "配置前端配置文件" && sleep 2s
+echo "import axios from 'axios';
 import store from '../store';
 import { getToken } from '@/utils/auth'
 const websocket_base_url  = 'wss://${service_websocket_domain}'
@@ -930,7 +930,9 @@ export default service
   npm install  
   npm run build
 }
-#装错重新安装
+
+
+#后端装错重新安装
 remove_backend_service(){
     rm -f /usr/lib/systemd/system/websocket.service
     rm -f /usr/local/bin/uwsgi
@@ -940,7 +942,18 @@ remove_backend_service(){
     pip uninstall uwsgi -y
     pip uninstall virtualenv -y
 }
+
+
 #配置卡机后端程序
+#1.创建virtualenv虚拟环境 
+#2.安装uwsgi 
+#3.创建程序工作目录 /opt/publiccloudplatform/
+#4.卡机后端程序包需要配置的地方
+#5.rabbitmq 配置 /main/config.yml
+#6.redis和mysql 配置 main/setting.py
+#7.webscoket服务配置  websocket.service
+#8.uwsgi配置     .uwsgi.ini
+#9.计划任务配置 ./celery start
 cardsvr_backend_config(){
 	if [ -f "$workdir${cardplatformback}.zip" ];then
 		echo " 文件 ${cardplatformback}.zip 找到 "
@@ -962,16 +975,7 @@ yum remove -y openssl openssl-devel
 python -m pip install uwsgi 
 ln -s /usr/local/python3.8.9/bin/uwsgi /usr/local/bin/uwsgi
 ln -s /usr/local/python3.8.9/bin/virtualenv /usr/local/bin/virtualenv
-#创建virtualenv虚拟环境 配置地址
-#/data/software/vue_pubCloud_platform_w/src/utils 
-#mkdir -p /opt/publiccloudplatform/ && cd /opt/publiccloudplatform/
-#卡机后端程序包需要配置的地方
-#rabbitmq 配置 /main/config.yml
-#redis和mysql 配置 main/setting.py
-#webscoket服务配置  websocket.service
-#计划任务配置 ./celery start
-#获取卡机前端升级包
-#uwsgi配置     .uwsgi.ini
+
 echo "写入uwsgi配置文件到 $workdir/$cardplatformback/" && sleep 2s
 mv $workdir/$cardplatformback/uwsgi.ini $workdir/$cardplatformback/uwsgi.bak
 echo "
