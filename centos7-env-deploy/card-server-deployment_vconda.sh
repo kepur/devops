@@ -341,8 +341,7 @@ overwrite_nginx_configfile(){
     ;;
     esac
 echo "配置nginx配置文件" && sleep 2s
-echo "
-user  www;
+echo "user  www;
 worker_processes  ${worker_processes};
 worker_cpu_affinity ${cpu_affinity};
 error_log  logs/error.log;
