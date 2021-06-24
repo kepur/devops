@@ -1,34 +1,3 @@
-#!/bin/bash
-redis406_install(){
-	echo "正在执行redis安装"
-	sleep 1s
-	tar -zxvf redis-4.0.6.tar.gz
-	cd \redis-4.0.6\
-	make MALLOC=libc
-	cd \src
-	make install 
-	cp /opt/redis-4.0.6/redis.conf /etc/redis/6379.conf
-	cp /opt/redis-4.0.6/utils/redis_init_script /etc/init.d/redisd
-	sed -i '2i\
-	# chkconfig:   2345 90 10
-	# description:  Redis is a persistent key-value database' /etc/init.d/redisd
-	echo '''
-	[Unit]
-	Description=redis-server
-	After=network.target
-
-	[Service]
-	Type=forking
-	ExecStart=/usr/local/bin/redis-server /etc/redis/6379.conf
-	PrivateTmp=true
-
-	[Install]
-	WantedBy=multi-user.target
-	''' >> /lib/systemd/system/redis.service
-	systemctl enable redis.service
-	systemctl restart redis.service
-}
-
 #https://download.redis.io/releases/redis-6.2.3.tar.gz?_ga=2.171752800.1114973999.1621433299-296576591.1621433299
 redis_root_url="https://download.redis.io/releases/"
 pkg_dir=/opt/pkg_dir
@@ -80,7 +49,6 @@ redis_install(){
 	system daemon-reload
 	systemctl enable redis.service
 	systemctl restart redis.service
-
 }
 
 function menu_choice {

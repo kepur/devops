@@ -1275,7 +1275,7 @@ echo "创建python虚拟环境" && sleep 2s
 cd $workdir && virtualenv cardmgtplatform
 echo "进入python虚拟环境并导入环境变量" && sleep 2s
 source $workdir/cardmgtplatform/bin/activate
-echo "初始软件" && sleep 2s
+echo "卡机系统lib依赖库安装" && sleep 2s
 cd $workdir/$cardplatformback && pip install -r requirement.txt
 python certify_install.py
 echo "初始化映射数据库" && sleep 2s
