@@ -1006,8 +1006,6 @@ Restart=always
 [Install]
 WantedBy=multi-user.target
 ">/usr/lib/systemd/system/websocket.service
-systemctl daemon-reload
-systemctl start websocket
 echo "写入rabbitmq 配置文件到 $workdir/$cardplatformback/main/config.yml" && sleep 2s
 mv $workdir/$cardplatformback/main/config.yml $workdir/$cardplatformback/main/config.ymlbak
 echo "main:
@@ -1286,9 +1284,14 @@ python manage.py migrate
 echo "下面将创建系统用户 " && sleep 3s
 python manage.py createsuperuser
 uwsgi --ini uwsgi.ini
+echo "启动webscoket" && sleep 3s
+systemctl daemon-reload
+systemctl start websocket
 echo "启动计划任务" && sleep 2s
 sh ./celery.sh start
 }
+
+
 card_service_install(){
     get_os_info 
     #更改yum源
@@ -1305,7 +1308,7 @@ card_service_install(){
     redis_install 6.2.3
     #安装python 指定3.8.9版本
     python_install 3.8.9
-    #安装rabbit mq 指定22.0版本
+    #安装erlang 指定22.0版本
     erlang_install 22.0
     #安装rabbit mq 指定3.7.15版本
     rabbit_mq_install 3.7.15
@@ -1328,4 +1331,20 @@ card_service_install(){
     #卡机后端程序下载安装
     cardsvr_backend_config
 }
-card_service_install
+#启动后端口检查
+# [root@VM-0-6-centos cardplatform_back_end]# netstat -nptl
+# Active Internet connections (only servers)
+# Proto Recv-Q Send-Q Local Address           Foreign Address         State       PID/Program name    
+# tcp        0      0 0.0.0.0:2631            0.0.0.0:*               LISTEN      8815/sshd           
+# tcp        0      0 0.0.0.0:25672           0.0.0.0:*               LISTEN      10863/beam.smp      
+# tcp        0      0 127.0.0.1:6379          0.0.0.0:*               LISTEN      24097/redis-server  
+# tcp        0      0 0.0.0.0:10000           0.0.0.0:*               LISTEN      25778/uwsgi         
+# tcp        0      0 0.0.0.0:80              0.0.0.0:*               LISTEN      19655/nginx: master 
+# tcp        0      0 0.0.0.0:10001           0.0.0.0:*               LISTEN      25157/python        
+# tcp        0      0 0.0.0.0:4369            0.0.0.0:*               LISTEN      10772/epmd          
+# tcp        0      0 127.0.0.1:33685         0.0.0.0:*               LISTEN      25778/uwsgi         
+# tcp        0      0 0.0.0.0:443             0.0.0.0:*               LISTEN      19655/nginx: master 
+# tcp6       0      0 :::5672                 :::*                    LISTEN      10863/beam.smp      
+# tcp6       0      0 :::3306                 :::*                    LISTEN      28255/mysqld        
+# tcp6       0      0 ::1:6379                :::*                    LISTEN      24097/redis-server  
+# tcp6       0      0 :::4369                 :::*                    LISTEN      10772/epmd 
