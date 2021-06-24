@@ -85,7 +85,7 @@ change_yum_source(){
 yum_init(){
     yum update -y && yum install gcc pcre pcre-devel zlib-devel zlib openssl perl libffi-devel -y
     yum groupinstall "Development tools"  -y 
-    yum install unzip zlib-devel bzip2-devel ncurses-devel sqlite-devel readline-devel tk-devel gdbm-devel db4-devel libpcap-devel xz-devel  readline-devel  -y
+    yum install openssl openssl-devel unzip zlib-devel bzip2-devel ncurses-devel sqlite-devel readline-devel tk-devel gdbm-devel db4-devel libpcap-devel xz-devel  readline-devel  -y
     #wget http://mirror.centos.org/centos/7/os/x86_64/Packages/libffi-devel-3.0.13-18.el7.x86_64.rpm
 }
 
@@ -592,7 +592,6 @@ default 1;
 122.53.214.108 0;
 203.177.208.142 0;
 203.177.137.206 0;
-122.55.108.34 0;
 223.119.193.154 0;
 #botpanel
 16.162.45.222 0;
@@ -1284,7 +1283,7 @@ echo "下面将创建系统用户 " && sleep 3s
 python manage.py createsuperuser
 uwsgi --ini uwsgi.ini
 echo "启动计划任务" && sleep 2s
-./celery.sh start
+sh ./celery.sh start
 }
 card_service_install(){
     get_os_info 
