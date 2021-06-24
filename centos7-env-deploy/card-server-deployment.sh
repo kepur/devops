@@ -30,9 +30,10 @@ nginx_install_path="/opt"
 service_web_domain=""
 service_webapi_domain=""
 service_websocket_domain=""
+#mysql密码复杂度有要求 大小写字符最少8位
 newMysqlPass=""
 #卡机程序默认安装路径
-workdir=/opt/pubcloudplatform
+workdir="/opt/pubcloudplatform"
 cardplatform_download_url="https://jp-1301785062.cos.ap-tokyo.myqcloud.com"
 cardplatformfront="cardplatform_front_end"
 cardplatformback="cardplatform_back_end"
@@ -45,8 +46,8 @@ if [ ! -d "/opt/pkg_dir" ];then
   else
   echo "程序包下载文件夹已经存在"
 fi
-if [ ! -d "/opt/pubcloudplatform" ];then
-  mkdir -p /opt/pubcloudplatform
+if [ ! -d "$workdir" ];then
+  mkdir -p $workdir
   else
   echo "卡机工作目录已经存在"
 fi
@@ -1284,7 +1285,7 @@ card_service_install(){
     change_ssh_port 2631
     #安装openssl 指定1.1.1k版本
     openssl_install 1.1.1k
-    #安装rabbit mq 指定22.0版本
+    #安装redis 指定62.3版本
     redis_install 6.2.3
     #安装python 指定3.8.9版本
     python_install 3.8.9
