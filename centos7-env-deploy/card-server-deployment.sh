@@ -642,7 +642,7 @@ echo "server {
     include      $nginx_install_path/nginx/conf/vhost/commom.server.module;
     access_log ${nginx_install_path}/nginx/logs/${service_webapi_domain}_access.log main_json;
     error_log ${nginx_install_path}/nginx/logs/${service_webapi_domain}_error.log;
-    set $resp_body \"\";
+    set \$resp_body \"\";
     body_filter_by_lua '
     local resp_body = string.sub(ngx.arg[1],1,1000)
     ngx.ctx.buffered=(ngx.ctx.buffered or \"\")..resp_body
