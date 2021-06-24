@@ -247,11 +247,11 @@ mysql_install(){
         fi
 	fi
     cd $pkg_dir && rpm -ivh $mysql
-	yum -y install mysql-server mysql-devel
     #如缺少插件
-    #rpm -ivh https://repo.almalinux.org/almalinux/8.3-beta/BaseOS/x86_64/os/Packages/numactl-libs-2.0.12-11.el8.x86_64.rpm
+    rpm -ivh https://repo.almalinux.org/almalinux/8.3-beta/BaseOS/x86_64/os/Packages/numactl-libs-2.0.12-11.el8.x86_64.rpm
+	yum -y install mysql-server mysql-devel
 	systemctl restart mysqld
-	systemctl enable mysqld.services	
+	systemctl enable mysqld	
 	oldpass=`grep pass /var/log/mysqld.log | awk '{print $NF}'`
 	/usr/bin/mysql --connect-expired-password -uroot -p${oldpass} -e "ALTER USER 'root'@'localhost' IDENTIFIED BY '"${mysqlpasswd}"';"
 	/usr/bin/mysql --connect-expired-password -uroot -p${oldpass} -e " flush privileges;"
@@ -297,8 +297,8 @@ openresty_install(){
     else
         echo "非1.17版本" && sleep 2s
     fi
-    ./configure --user=www --group=www  --with-luajit --without-lua_resty_dns --without-lua_resty_websocket --without-http_redis2_module  --with-http_stub_status_module --with-http_ssl_module --with-http_gzip_static_module --with-openssl=/usr/local/openssl --prefix=$nginx_install_path
-    cd 
+    ./configure --user=www --group=www  --with-luajit --without-lua_resty_dns --without-lua_resty_websocket --without-http_redis2_module --with-http_stub_status_module --with-http_ssl_module --with-http_gzip_static_module --with-openssl=/usr/local/openssl --prefix=$nginx_install_path
+    cd $pkg_dir/openresty-$openresty_version 
     gmake && gmake install
 echo '''
 [Unit]
