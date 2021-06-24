@@ -668,7 +668,7 @@ echo "server {
     listen       80;
     server_name  ${service_websocket_domain};
     include      $nginx_install_path/nginx/conf/vhost/commom.server.module;
-    access_log '${nginx_install_path}/nginx/logs/${service_websocket_domain}_access.log main_json;
+    access_log ${nginx_install_path}/nginx/logs/${service_websocket_domain}_access.log main_json;
     error_log ${nginx_install_path}/nginx/logs/${service_websocket_domain}_error.log;
     set \$resp_body \" \";
     body_filter_by_lua '
@@ -724,9 +724,11 @@ touch $BASEPATH/$elog;
 kill -USR1 `cat /var/run/nginx.pid`;
 done
 ''' >$nginx_install_path/nginx/sbin/nginxcutlog.sh
-    curr_user=`echo 当前用户为:$USER 添加计划任务` && sleep 2s
+    curr_user=`echo $USER`
+    echo "当前用户为:$curr_user 添加计划任务" && sleep 2s
     echo "1 0 * * * bash $nginx_install_path/nginx/bin/nginxcutlog.sh" >> "/var/spool/cron/$curr_user"
-    systemctl restart nginx && sleep 5s
+    systemctl restart nginx 
+    systemctl status nginx && sleep 5s
 }
 
 
@@ -827,7 +829,7 @@ node_install(){
 
 #创建数据库
 mysql_service_config(){
-    $public_cloud_platform_database_passwd=$1
+    public_cloud_platform_database_passwd=$1
     echo "您的public_cloud_platform数据库密码为:$public_cloud_platform_database_passwd" && sleep 3s
     /usr/bin/mysql --connect-expired-password -uroot -p${newMysqlPass} -e " create user 'card'@'%' identified by '$public_cloud_platform_database_passwd';"
     /usr/bin/mysql --connect-expired-password -uroot -p${newMysqlPass} -e " grant all privileges on *.* to card@'%' identified by '$public_cloud_platform_database_passwd';"
@@ -957,7 +959,7 @@ cd $workdir/${cardplatformback}
 pip install virtualenv
 python -m pip install --upgrade pip
 #自定义安装openssl 需要卸载默认yum安装的openssl-devel
-yum remove -y openssl-devel
+yum remove -y openssl openssl-devel
 python -m pip install uwsgi 
 ln -s /usr/local/python3.8.9/bin/uwsgi /usr/local/bin/uwsgi
 ln -s /usr/local/python3.8.9/bin/virtualenv /usr/local/bin/virtualenv
@@ -1267,14 +1269,14 @@ if __name__ == '__main__':
     main()
 EOF
 echo "安装证书" && sleep 2s
-python install certify_install.py
+python certify_install.py
 echo "创建python虚拟环境" && sleep 2s
 cd $workdir && virtualenv cardmgtplatform
 echo "进入python虚拟环境并导入环境变量" && sleep 2s
 source $workdir/cardmgtplatform/bin/activate
 echo "初始软件" && sleep 2s
 cd $workdir/$cardplatformback && pip install -r requirement.txt
-python install certify_install.py
+python certify_install.py
 echo "初始化映射数据库" && sleep 2s
 python manage.py makemigrations
 python manage.py migrate
@@ -1310,7 +1312,7 @@ card_service_install(){
     #安装node npm
     node_install 12.20.0
     #创建数据库
-    mysql_service_config
+    mysql_service_config $pubcloud_platform_db_passwd
     #rabbitmq创建用户
     rabbitmq_service_config $rabbitmq_username  $rabbitmq_password
     #redis设置密码
