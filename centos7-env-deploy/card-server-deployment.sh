@@ -27,11 +27,11 @@ rabbitmq_root_url='https://github.com/rabbitmq/rabbitmq-server/releases/download
 node_root_url='https://nodejs.org/dist'
 #需要配置
 nginx_install_path="/opt"
-service_web_domain=""
-service_webapi_domain=""
-service_websocket_domain=""
+service_web_domain="card.jy260.com"
+service_webapi_domain="api.jy260.com"
+service_websocket_domain="ws.jy260.com"
 #mysql密码复杂度有要求 大小写字符最少8位
-newMysqlPass=""
+newMysqlPass="Aa234..com"
 #卡机程序默认安装路径
 workdir="/opt/pubcloudplatform"
 cardplatform_download_url="https://jp-1301785062.cos.ap-tokyo.myqcloud.com"
@@ -772,9 +772,9 @@ rabbit_mq_install(){
 			exit 1
         fi
 	fi
-    cd $pkg_dir && echo "正在执行Erlang安装"
+    cd $pkg_dir && echo "正在执行RabbitMq安装"
 	yum install -y xz && xz -d $rabbitmq
-	tar -xvf rabbitmq-server-generic-unix-v$rabbitmq_version.tar
+	tar -xvf rabbitmq-server-generic-unix-$rabbitmq_version.tar
 	mv rabbitmq_server-$rabbitmq_version /usr/local/
 	mv /usr/local/rabbitmq_server-$rabbitmq_version /usr/local/rabbitmq
 	echo 'export PATH=$PATH:/usr/local/rabbitmq/sbin' >>/etc/profile
@@ -1286,19 +1286,19 @@ echo "启动计划任务" && sleep 2s
 }
 card_service_install(){
     get_os_info 
-    change_yum_source 
-    yum_init
-    change_localtime
+    #change_yum_source 
+    #yum_init
+    #change_localtime
     #更改ssh端口 指定2631
-    change_ssh_port 2631
+    #change_ssh_port 2631
     #安装openssl 指定1.1.1k版本
-    openssl_install 1.1.1k
+    #openssl_install 1.1.1k
     #安装redis 指定62.3版本
-    redis_install 6.2.3
+    #redis_install 6.2.3
     #安装python 指定3.8.9版本
-    python_install 3.8.9
+    #python_install 3.8.9
     #安装rabbit mq 指定22.0版本
-    erlang_install 22.0
+    #erlang_install 22.0
     #安装rabbit mq 指定3.7.15版本
     rabbit_mq_install 3.7.15
     #安装mysql
