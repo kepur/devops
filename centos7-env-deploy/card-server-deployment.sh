@@ -16,7 +16,7 @@ host=$( hostname )
 kern=$( uname -r )
 #软件包安装路径
 pkg_dir="/opt/pkg_dir"
-#下载地址
+#中间件下载地址
 openssl_root_url="https://www.openssl.org/source"
 python_root_url="https://www.python.org/ftp/python"
 mysql_root_url="https://repo.mysql.com/"
@@ -41,11 +41,13 @@ redispasswd="Aaredis.com"
 pubcloud_platform_db_passwd="Aa123..com"
 rabbitmq_username='admin'
 rabbitmq_password='pWdrAbiTin'
+#软件包安装路径
 if [ ! -d "/opt/pkg_dir" ];then
   mkdir -p /opt/pkg_dir
   else
   echo "程序包下载文件夹已经存在"
 fi
+#卡机程序工作目录
 if [ ! -d "$workdir" ];then
   mkdir -p $workdir
   else
@@ -70,7 +72,7 @@ get_os_info(){
     echo 
     echo "########################################"
 }
-
+#更新yum源
 change_yum_source(){
     cd /etc/yum.repos.d
     mv CentOS-Base.repo CentOS-Base.repo.backup
@@ -79,6 +81,7 @@ change_yum_source(){
     yum clean all
 }
 
+#yum安装基本依赖
 yum_init(){
     yum update -y && yum install gcc pcre pcre-devel zlib-devel zlib openssl perl libffi-devel -y
     yum groupinstall "Development tools"  -y 
@@ -86,7 +89,7 @@ yum_init(){
     #wget http://mirror.centos.org/centos/7/os/x86_64/Packages/libffi-devel-3.0.13-18.el7.x86_64.rpm
 }
 
-
+#更改时区同步时间
 change_localtime(){
 	echo "安装ntp服务并校验时间..............."
 	timedatectl set-timezone Asia/Shanghai
@@ -97,6 +100,7 @@ change_localtime(){
     echo "当前时间为:" && date
 }
 
+#更改SSH端口
 change_ssh_port(){
     local port=$1
 	echo "更改ssh默认端口..............." && sleep 1s
@@ -107,7 +111,7 @@ change_ssh_port(){
 	systemctl restart sshd.service
 }
 
-
+#安装openssl
 openssl_install(){
     local openssl_version=$1
     echo $openssl_version
@@ -138,6 +142,7 @@ openssl_install(){
 }
 
 
+#安装redis
 redis_install(){
     echo "正在安装redis" && sleep 3s
     local redis_version=$1
@@ -184,7 +189,7 @@ redis_install(){
 	systemctl restart redis.service
 }
 
-
+#安装python
 python_install(){
     local python_version=$1
 	echo $python_version
@@ -212,6 +217,7 @@ python_install(){
 }
 
 
+#安装mysql
 mysql_install(){
     #read -p "请输入mysqlroot的密码" newMysqlPass
     #https://repo.mysql.com//mysql80-community-release-el7-3.noarch.rpm
@@ -252,6 +258,7 @@ mysql_install(){
 }
 
 
+#安装openresty
 openresty_install(){
     useradd -s /sbin/nologin www 
     # https://openresty.org/download/openresty-1.19.3.2.tar.gz
@@ -322,6 +329,7 @@ WantedBy=multi-user.target
 }
 
 
+#配置nginx
 overwrite_nginx_configfile(){
     #local worker_processes=`expr $( awk -F: '/model name/ {core++} END {print core}' /proc/cpuinfo ) \* 2` 
     local worker_processes=`expr $( awk -F: '/model name/ {core++} END {print core}' /proc/cpuinfo ) ` 
@@ -766,7 +774,7 @@ rabbit_mq_install(){
 	fi
     cd $pkg_dir && echo "正在执行Erlang安装"
 	yum install -y xz && xz -d $rabbitmq
-	tar -xvf rabbitmq-server-generic-unix-$rabbitmq_version.tar
+	tar -xvf rabbitmq-server-generic-unix-v$rabbitmq_version.tar
 	mv rabbitmq_server-$rabbitmq_version /usr/local/
 	mv /usr/local/rabbitmq_server-$rabbitmq_version /usr/local/rabbitmq
 	echo 'export PATH=$PATH:/usr/local/rabbitmq/sbin' >>/etc/profile
