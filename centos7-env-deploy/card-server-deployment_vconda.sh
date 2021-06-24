@@ -1219,11 +1219,13 @@ else:
 ">$workdir/$cardplatformback/main/settings.py
 echo "创建python虚拟环境" && sleep 2s
 cd $workdir && virtualenv cardmgtplatform
+pip install --upgrade certifi
 echo "进入python虚拟环境并导入环境变量" && sleep 2s
 source $workdir/cardmgtplatform/bin/activate
 echo "初始软件" && sleep 2s
 cd $workdir/$cardplatformback && pip install -r requirement.txt
 echo "初始化映射数据库" && sleep 2s
+pip install --upgrade certifi
 python manage.py makemigrations
 python manage.py migrate
 echo "下面将创建系统用户 " && sleep 3s
@@ -1233,6 +1235,14 @@ echo "启动计划任务" && sleep 2s
 ./celery.sh start
 }
 
+
+aconda_install_y(){
+    wget   https://repo.anaconda.com/archive/Anaconda3-2020.11-Linux-x86_64.sh
+    vim /root/.bashrc
+    export PATH="/root/anaconda3/bin:$PATH"
+    source /root/.bashrc
+    conda create -n python38 python=python3.8.8
+}
 card_service_install(){
     get_os_info 
     change_yum_source 
