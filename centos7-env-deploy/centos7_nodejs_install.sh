@@ -42,5 +42,55 @@ node_install(){
     ln -s /usr/local/node-v$node_version-linux-x64/bin/node /usr/bin/node
     ln -s /usr/local/node-v$node_version-linux-x64/bin/npm /usr/bin/npm
 }
-node_install 12.20.0
+
 #curl -o- https://jira.mouthmelt.com/centos7-env-deploy/centos7_nodejs_install.sh | bash
+function menu_choice {
+	clear 
+	echo
+	echo -e "\t\t. 选择node 安装的版本"
+	echo -e "\t1.  node 12.20.0安装"
+	echo -e "\t2.  node 13.14.0安装"
+	echo -e "\t3.  node 13.4.0安装"
+	echo -e "\t4.  node 13.9.0安装"
+	echo -e "\t5.  node 14.10.0安装"
+	echo -e "\t6.  node 14.6.0安装"
+	echo -e "\t7.  node 15.10.0安装"
+	echo -e "\t8.  node 15.9.0安装"
+	echo -e "\t9.  node 16.4.0安装"
+	echo -e "\t0. Exit menu\n\n"
+	#-en 选项会去掉末尾的换行符，这让菜单看起来更专业一些
+	echo -en "\t\t Enter option:" 
+	#read 命令读取用户输入
+	read -n 1 choice_version
+	}
+while [ 1 ]
+	do 
+		menu_choice
+		case $choice_version in
+		0)
+			break ;;
+		1)
+			node_install 12.20.0;;
+		2)
+			node_install 13.14.0;;
+		3)
+			node_install 13.4.0;;
+		4)
+			node_install 13.9.0;;
+		5)
+			node_install 14.10.0;;
+		6)
+			node_install 14.6.0 ;;
+		7)
+			node_install 15.10.0;;
+		8)
+			node_install 15.9.0;;
+		9)
+			node_install 16.4.0;;
+		*)
+			clear
+			echo "sorry,wrong selection" ;;
+		esac
+		echo -en "\n\n\t\thit any to contunue"
+		read -n 1 line
+done
