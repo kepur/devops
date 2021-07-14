@@ -7,6 +7,7 @@ from qcloud_cos import CosS3Client
 #环境依赖 && 官方文档
 #pip install -U cos-python-sdk-v5
 #https://cloud.tencent.com/document/product/436/12269
+
 class ScriptEventHandler(FileSystemEventHandler):
 
     def __init__(self,secret_id,secret_key,region,bucket,localpath):
@@ -140,9 +141,9 @@ class ScriptEventHandler(FileSystemEventHandler):
 if __name__ == "__main__":
     secret_id = ''  # 替换为用户的 secretId(登录访问管理控制台获取)
     secret_key = ''  # 替换为用户的 secretKey(登录访问管理控制台获取)
-    event_handler1 = ScriptEventHandler(secret_id=secret_id,secret_key=secret_key,bucket='jp-1301785062',region='ap-tokyo',localpath="d:\\eeb8.web")
+    event_handler1 = ScriptEventHandler(secret_id=secret_id,secret_key=secret_key,bucket='jp-1301785062',region='ap-tokyo',localpath="c:\\share\oss_rsync")
     observer = Observer()
-    watch = observer.schedule(event_handler1,path="d:\\eeb8.web",recursive=True)
+    watch = observer.schedule(event_handler1,path="d:\\share\oss_rsync",recursive=True)
 
     """
     配置日志
